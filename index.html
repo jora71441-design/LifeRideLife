@@ -167,15 +167,15 @@
 
   <!-- Главные категории -->
   <div class="tabs">
-    <button class="tab-btn active" onclick="setCategory('all')">🚲 Велосипеды</button>
-    <button class="tab-btn" onclick="setCategory('upgrade')">⚡ Upgrade Kits</button>
-    <button class="tab-btn" onclick="setCategory('components')">⚙️ Комплектующие</button>
+    <button class="tab-btn active" onclick="setCategory(event, 'bikes')">🚲 Велосипеды</button>
+    <button class="tab-btn" onclick="setCategory(event, 'upgrade')">⚡ Upgrade Kits</button>
+    <button class="tab-btn" onclick="setCategory(event, 'components')">⚙️ Комплектующие</button>
+    <button class="tab-btn" onclick="setCategory(event, 'reviews')">⭐ Отзывы</button>
   </div>
 
   <!-- Расширенные фильтры -->
   <div id="filters">
     
-    <!-- По бюджету -->
     <div class="filter-group">
       <div class="filter-title">💰 По бюджету</div>
       <div class="filter-scroll">
@@ -186,7 +186,6 @@
       </div>
     </div>
 
-    <!-- По наличию -->
     <div class="filter-group">
       <div class="filter-title">🚴‍♂️ По наличию</div>
       <div class="filter-scroll">
@@ -197,7 +196,6 @@
       </div>
     </div>
 
-    <!-- Подобрать по росту -->
     <div class="filter-group">
       <div class="filter-title">📏 Подобрать по росту</div>
       <div class="filter-scroll">
@@ -209,7 +207,6 @@
       </div>
     </div>
 
-    <!-- По классу байка -->
     <div class="filter-group">
       <div class="filter-title">🏎 По классу байка</div>
       <div class="filter-scroll">
@@ -222,7 +219,6 @@
       </div>
     </div>
 
-    <!-- По марке -->
     <div class="filter-group">
       <div class="filter-title">🚲 По марке</div>
       <div class="filter-scroll">
@@ -254,7 +250,6 @@
       </div>
     </div>
 
-    <!-- По навеске -->
     <div class="filter-group">
       <div class="filter-title">⚒ По навеске</div>
       <div class="filter-scroll">
@@ -298,9 +293,13 @@
       }
     }
 
-    function setCategory(cat) {
+    function setCategory(event, cat) {
+      // Убираем активный класс у всех кнопок
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      event.target.classList.add('active');
+      // Добавляем активный класс только той, на которую нажали
+      event.currentTarget.classList.add('active');
+      
+      // Логика скрытия/показа списков будет добавляться на следующих этапах
     }
 
     if (window.Telegram && window.Telegram.WebApp) {
