@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Life Ride Life</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg-color: var(--tg-theme-bg-color, #121212);
+      --card-bg: var(--tg-theme-secondary-bg-color, #1e1e1e);
+      --text-color: var(--tg-theme-text-color, #ffffff);
+      --hint-color: var(--tg-theme-hint-color, #aaaaaa);
+      --button-color: var(--tg-theme-button-color, #3390ec);
+      --button-text: var(--tg-theme-button-text-color, #ffffff);
+    }
+    body {
+      margin: 0; padding: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-color); color: var(--text-color); box-sizing: border-box;
+    }
+    .banner {
+      background: linear-gradient(135deg, #ff4500, #ff8c00); padding: 14px; border-radius: 12px;
+      color: #fff; font-weight: bold; text-align: center; margin-bottom: 16px; font-size: 15px;
+    }
+    .nav-tabs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 16px; padding-bottom: 4px; }
+    .tab-btn {
+      background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); color: var(--text-color);
+      padding: 10px 14px; border-radius: 20px; font-size: 13px; white-space: nowrap; cursor: pointer;
+    }
+    .tab-btn.active { background: var(--button-color); color: var(--button-text); border-color: transparent; }
+    
+    .filter-group { margin-bottom: 16px; }
+    .filter-title { font-size: 12px; color: var(--hint-color); text-transform: uppercase; margin-bottom: 8px; font-weight: 600; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      background: var(--card-bg); border: 1px solid rgba(255,255,255,0.15); color: var(--text-color);
+      padding: 6px 12px; border-radius: 14px; font-size: 12px; cursor: pointer;
+    }
+    .chip.active { background: var(--button-color); color: var(--button-text); border-color: transparent; }
+
+    .card-list { display: flex; flex-direction: column; gap: 16px; }
+    .card { background: var(--card-bg); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; }
+    .card-img { width: 100%; height: 200px; object-fit: cover; }
+    .card-content { padding: 14px; }
+    .card-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .card-tags { font-size: 12px; color: var(--button-color); margin-bottom: 10px; }
+    .card-price { font-size: 18px; font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .badge { font-size: 11px; padding: 4px 8px; border-radius: 8px; background: rgba(76, 175, 80, 0.2); color: #4caf50; }
+    
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .btn {
+      padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 600; border: none; cursor: pointer;
+      text-align: center; text-decoration: none; display: inline-block;
+    }
+    .btn-secondary { background: rgba(255,255,255,0.1); color: var(--text-color); }
+    .btn-primary { background: var(--button-color); color: var(--button-text); }
+  </style>
+</head>
+<body>
+
+  <div class="banner">🔥 Предзаказ сезона 2027</div>
+
+  <!-- Главные категории -->
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('bikes')">🚲 Велосипеды</button>
+    <button class="tab-btn" onclick="switchTab('kits')">⚡️ Upgrade Kits</button>
+    <button class="tab-btn" onclick="switchTab('parts')">⚙️ Комплектующие</button>
+    <button class="tab-btn" onclick="switchTab('reviews')">💬 Отзывы</button>
+  </div>
+
+  <!-- Фильтры для велосипедов -->
+  <div id="bike-filters">
+    <div class="filter-group">
+      <div class="filter-title">Размер / Рост</div>
+      <div class="chips">
+        <span class="chip" onclick="toggleFilter(this, '150_160cm')">151-162 см</span>
+        <span class="chip" onclick="toggleFilter(this, '170_180cm')">170-180 см</span>
+        <span class="chip" onclick="toggleFilter(this, '180_190cm')">180-190 см</span>
+      </div>
+    </div>
+    <div class="filter-group">
+      <div class="filter-title">Тип</div>
+      <div class="chips">
+        <span class="chip" onclick="toggleFilter(this, 'гравел')">#гравел</span>
+        <span class="chip" onclick="toggleFilter(this, 'шоссер')">#шоссер</span>
+        <span class="chip" onclick="toggleFilter(this, 'электро')">#электро</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Лента карточек -->
+  <div class="card-list" id="feed"></div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+
+    // Демо-данные (в реальности сюда парсятся посты из канала)
+    const posts = [
+      {
+        id: 1,
+        title: "Liv Devote Advanced 2",
+        price: "152 000 ₽",
+        status: "вналичии",
+        img: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600",
+        tags: ["#гравел", "#150_160cm", "#liv", "#giant", "#shimano"],
+        category: "bikes",
+        postUrl: "https://t.me/LifeRideLife/1"
+      },
+      {
+        id: 2,
+        title: "Upgrade Kit Shimano 105 Di2 R7150",
+        price: "89 000 ₽",
+        status: "вналичии",
+        img: "https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?w=600",
+        tags: ["#105di2", "#shimano", "#12speed", "#электро"],
+        category: "kits",
+        postUrl: "https://t.me/LifeRideLife/2"
+      }
+    ];
+
+    let currentTab = 'bikes';
+    let selectedTags = [];
+
+    function renderFeed() {
+      const feed = document.getElementById('feed');
+      feed.innerHTML = '';
+
+      const filtered = posts.filter(p => {
+        if (p.category !== currentTab) return false;
+        if (selectedTags.length === 0) return true;
+        return selectedTags.every(tag => p.tags.includes(tag));
+      });
+
+      if (filtered.length === 0) {
+        feed.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--hint-color);">По вашим фильтрам ничего не найдено</div>';
+        return;
+      }
+
+      filtered.forEach(item => {
+        const ctaText = currentTab === 'bikes' ? '💬 Обсудить модель' : 
+                        currentTab === 'kits' ? '💬 Обсудить кит' : 
+                        currentTab === 'reviews' ? '💬 Хочу подобрать' : '💬 Заказать деталь';
+
+        const message = encodeURIComponent(`Привет! Хочу обсудить: ${item.title} (${item.postUrl})`);
+        const directLink = `https://t.me/Piti4?text=${message}`;
+
+        feed.innerHTML += `
+          <div class="card">
+            <img class="card-img" src="${item.img}" alt="${item.title}">
+            <div class="card-content">
+              <div class="card-title">${item.title}</div>
+              <div class="card-tags">${item.tags.join(' ')}</div>
+              <div class="card-price">
+                ${item.price}
+                <span class="badge">🟢 ${item.status}</span>
+              </div>
+              <div class="actions">
+                <a href="${item.postUrl}" target="_blank" class="btn btn-secondary">📖 Читать пост</a>
+                <a href="${directLink}" class="btn btn-primary">${ctaText}</a>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('bike-filters').style.display = tab === 'bikes' ? 'block' : 'none';
+      renderFeed();
+    }
+
+    function toggleFilter(el, tag) {
+      const fullTag = tag.startsWith('#') ? tag : '#' + tag;
+      if (selectedTags.includes(fullTag)) {
+        selectedTags = selectedTags.filter(t => t !== fullTag);
+        el.classList.remove('active');
+      } else {
+        selectedTags.push(fullTag);
+        el.classList.add('active');
+      }
+      renderFeed();
+    }
+
+    renderFeed();
+  </script>
+</body>
+</html>
