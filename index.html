@@ -101,7 +101,7 @@
     }
     .card-img {
       width: 100%;
-      height: 200px;
+      height: 220px;
       object-fit: cover;
       background: #0d131a;
     }
@@ -112,11 +112,13 @@
       font-size: 16px;
       font-weight: bold;
       margin-bottom: 6px;
+      line-height: 1.3;
     }
     .card-tags {
       font-size: 12px;
       color: var(--accent-color);
       margin-bottom: 10px;
+      word-break: break-word;
     }
     .card-footer {
       display: flex;
@@ -150,6 +152,7 @@
       cursor: pointer;
       text-align: center;
       text-decoration: none;
+      box-sizing: border-box;
     }
     .btn-secondary {
       background: rgba(255,255,255,0.1);
@@ -158,6 +161,12 @@
     .btn-primary {
       background: var(--accent-color);
       color: #fff;
+    }
+    .status-msg {
+      text-align: center;
+      padding: 30px;
+      color: var(--text-muted);
+      font-size: 14px;
     }
   </style>
 </head>
@@ -263,25 +272,114 @@
 
   <!-- Карточки товаров -->
   <div class="catalog" id="catalog">
-    <div class="card">
-      <img src="https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600" class="card-img" alt="Bike">
-      <div class="card-body">
-        <div class="card-title">Liv Devote Advanced 2</div>
-        <div class="card-tags">#гравел #150_160cm #liv #giant #shimano #150_250к</div>
-        <div class="card-footer">
-          <div class="card-price">152 000 ₽</div>
-          <div class="badge">🟢 в наличии</div>
-        </div>
-        <div class="card-actions">
-          <a href="https://t.me/LifeRideLife" class="btn btn-secondary">📖 Читать пост</a>
-          <a href="https://t.me/Piti4?text=Здравствуйте!%20Интересует%20Liv%20Devote%20Advanced%202" class="btn btn-primary">💬 Обсудить модель</a>
-        </div>
-      </div>
-    </div>
+    <div class="status-msg">⏳ Загрузка каталога из канала @LifeRideLife...</div>
   </div>
 
   <script>
+    let postsData = [];
     let selectedTags = new Set();
+    let currentCategory = 'bikes';
+
+    // Функция загрузки постов из Telegram-канала
+    async function fetchChannelPosts() {
+      const catalogEl = document.getElementById('catalog');
+      try {
+        const proxyUrl = 'https://api.allorigins.win/raw?url=';
+        const targetUrl = encodeURIComponent('https://t.me/s/LifeRideLife');
+        const response = await fetch(proxyUrl + targetUrl);
+        const htmlText = await response.text();
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlText, 'text/html');
+        const messageElements = doc.querySelectorAll('.tgme_widget_message');
+
+        postsData = [];
+
+        messageElements.forEach(msg => {
+          const textEl = msg.querySelector('.tgme_widget_message_text');
+          if (!textEl) return;
+
+          const text = textEl.innerText || textEl.textContent || '';
+          
+          // Поиск хэштегов
+          const tagsInText = text.match(/#[a-zA-Z0-9_а-яА-ЯёЁ]+/g) || [];
+          const lowerTags = tagsInText.map(t => t.toLowerCase());
+
+          // Картинка
+          const photoWrap = msg.querySelector('.tgme_widget_message_photo_wrap');
+          let imgUrl = 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600';
+          if (photoWrap) {
+            const styleAttr = photoWrap.getAttribute('style') || '';
+            const match = styleAttr.match(/background-image:url\('([^']+)'\)/);
+            if (match) imgUrl = match[1];
+          }
+
+          // Ссылка на пост
+          const linkEl = msg.querySelector('.tgme_widget_message_date');
+          const postUrl = linkEl ? linkEl.getAttribute('href') : 'https://t.me/LifeRideLife';
+
+          // Извлечение заголовка и цены
+          const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+          const title = lines[0] ? lines[0].replace(/#[^\s]+/g, '').trim() : 'Товар';
+
+          const priceMatch = text.match(/(\d[\d\s]*\s*₽|\d[\d\s]*\s*€|\d[\d\s]*\s*\$)/);
+          const price = priceMatch ? priceMatch[1] : 'По запросу';
+
+          postsData.push({
+            title: title || 'Товар LifeRideLife',
+            rawText: text.toLowerCase(),
+            tags: lowerTags,
+            originalTagsText: tagsInText.join(' '),
+            imgUrl: imgUrl,
+            price: price,
+            postUrl: postUrl
+          });
+        });
+
+        renderCatalog();
+      } catch (err) {
+        console.error(err);
+        catalogEl.innerHTML = '<div class="status-msg">⚠️ Не удалось подгрузить посты. Проверьте соединение.</div>';
+      }
+    }
+
+    // Отрисовка каталога с фильтрацией
+    function renderCatalog() {
+      const catalogEl = document.getElementById('catalog');
+      
+      const filtered = postsData.filter(post => {
+        // Фильтр по выбранным тегам (все выбранные теги должны присутствовать в посте)
+        for (let tag of selectedTags) {
+          const cleanTag = tag.toLowerCase();
+          const tagExistsInPost = post.tags.some(t => t.includes(cleanTag)) || post.rawText.includes(cleanTag);
+          if (!tagExistsInPost) return false;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        catalogEl.innerHTML = '<div class="status-msg">🚴‍♂️ Ничего не найдено по выбранным фильтрам</div>';
+        return;
+      }
+
+      catalogEl.innerHTML = filtered.map(post => `
+        <div class="card">
+          <img src="${post.imgUrl}" class="card-img" alt="Product">
+          <div class="card-body">
+            <div class="card-title">${post.title}</div>
+            <div class="card-tags">${post.originalTagsText}</div>
+            <div class="card-footer">
+              <div class="card-price">${post.price}</div>
+              <div class="badge">🟢 ${post.tags.includes('#вналичии') ? 'в наличии' : 'доступно'}</div>
+            </div>
+            <div class="card-actions">
+              <a href="${post.postUrl}" target="_blank" class="btn btn-secondary">📖 Читать пост</a>
+              <a href="https://t.me/Piti4?text=${encodeURIComponent('Здравствуйте! Интересует: ' + post.title + '\n' + post.postUrl)}" target="_blank" class="btn btn-primary">💬 Обсудить модель</a>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
 
     function toggleTag(el, tag) {
       if (selectedTags.has(tag)) {
@@ -291,21 +389,23 @@
         selectedTags.add(tag);
         el.classList.add('active');
       }
+      renderCatalog();
     }
 
     function setCategory(event, cat) {
-      // Убираем активный класс у всех кнопок
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      // Добавляем активный класс только той, на которую нажали
       event.currentTarget.classList.add('active');
-      
-      // Логика скрытия/показа списков будет добавляться на следующих этапах
+      currentCategory = cat;
+      renderCatalog();
     }
 
+    // Инициализация при запуске
     if (window.Telegram && window.Telegram.WebApp) {
       window.Telegram.WebApp.ready();
       window.Telegram.WebApp.expand();
     }
+
+    fetchChannelPosts();
   </script>
 </body>
 </html>
