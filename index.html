@@ -237,8 +237,25 @@
         <span class="tag-pill" onclick="toggleTag(this, '#canyon')">#canyon</span>
         <span class="tag-pill" onclick="toggleTag(this, '#bmc')">#bmc</span>
         <span class="tag-pill" onclick="toggleTag(this, '#trek')">#trek</span>
-        <span class="tag-pill" onclick="toggleTag(this, '#specialized')">#specialized</span>
+        <span class="tag-pill" onclick="toggleTag(this, '#Guerciotti')">#Guerciotti</span>
+        <span class="tag-pill" onclick="toggleTag(this, '#BH')">#BH</span>
+        <span class="tag-pill" onclick="toggleTag(this, '#focus')">#focus</span>
+        <span class="tag-pill" onclick="toggleTag(this, '#merida')">#merida</span>
         <span class="tag-pill" onclick="toggleTag(this, '#basso')">#basso</span>
+        <span class="tag-pill" onclick="toggleTag(this, '#ridley')">#ridley</span>
+        <span class="tag-pill" onclick="toggleTag(this, '#scott')">#scott</span>
+        <span class="tag-pill" onclick="toggleTag(this, '#surly')">#surly</span>
+        <span class="tag-pill" onclick="toggleTag(this, '#bianchi')">#bianchi</span>
+        <span class="tag-pill" onclick="toggleTag(this, '#format')">#format</span>
+        <span class="tag-pill" onclick="toggleTag(this, '#cube')">#cube</span>
+        <span class="tag-pill" onclick="toggleTag(this, '#specialized')">#specialized</span>
+        <span class="tag-pill" onclick="toggleTag(this, '#colnago')">#colnago</span>
+        <span class="tag-pill" onclick="toggleTag(this, '#argon18')">#argon18</span>
+        <span class="tag-pill" onclick="toggleTag(this, '#cinelli')">#cinelli</span>
+        <span class="tag-pill" onclick="toggleTag(this, '#wilier')">#wilier</span>
+        <span class="tag-pill" onclick="toggleTag(this, '#seka')">#seka</span>
+        <span class="tag-pill" onclick="toggleTag(this, '#winspace')">#winspace</span>
+        <span class="tag-pill" onclick="toggleTag(this, '#cervelo')">#cervelo</span>
       </div>
     </div>
 
@@ -255,7 +272,7 @@
 
   <!-- Карточки товаров -->
   <div class="catalog" id="catalog">
-    <div class="status-msg">⏳ Загрузка каталога...</div>
+    <div class="status-msg">⏳ Загрузка полной базы товаров...</div>
   </div>
 
   <script>
@@ -263,113 +280,33 @@
     let selectedTags = new Set();
     let currentCategory = 'bikes';
 
-    // Встроенный резервный набор данных для мгновенного теста фильтров
-    const fallbackPosts = [
-      {
-        title: "Giant Revolt Advanced 2 (2024)",
-        rawText: "#гравел #giant #shimano #170_180cm #250_400к #вналичии",
-        tags: ["#гравел", "#giant", "#shimano", "#170_180cm", "#250_400к", "#вналичии"],
-        originalTagsText: "#гравел #giant #shimano #170_180cm #250_400к #вналичии",
-        imgUrl: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600",
-        price: "285 000 ₽",
-        postUrl: "https://t.me/LifeRideLife"
-      },
-      {
-        title: "Specialized Crux Comp",
-        rawText: "#гравел #specialized #sram #180_190cm #400_600к #подзаказ",
-        tags: ["#гравел", "#specialized", "#sram", "#180_190cm", "#400_600к", "#подзаказ"],
-        originalTagsText: "#гравел #specialized #sram #180_190cm #400_600к #подзаказ",
-        imgUrl: "https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?w=600",
-        price: "420 000 ₽",
-        postUrl: "https://t.me/LifeRideLife"
-      },
-      {
-        title: "Canyon Ultimate CF SL 8",
-        rawText: "#шоссер #canyon #shimano #электро #170_180cm #250_400к #вналичии",
-        tags: ["#шоссер", "#canyon", "#shimano", "#электро", "#170_180cm", "#250_400к", "#вналичии"],
-        originalTagsText: "#шоссер #canyon #shimano #электро #170_180cm #250_400к #вналичии",
-        imgUrl: "https://images.unsplash.com/photo-1576435728678-68d0fbf94e91?w=600",
-        price: "340 000 ₽",
-        postUrl: "https://t.me/LifeRideLife"
-      },
-      {
-        title: "Basso Tera Gravel Disc",
-        rawText: "#гравел #basso #shimano #160_170cm #150_250к #вналичии",
-        tags: ["#гравел", "#basso", "#shimano", "#160_170cm", "#150_250к", "#вналичии"],
-        originalTagsText: "#гравел #basso #shimano #160_170cm #150_250к #вналичии",
-        imgUrl: "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=600",
-        price: "210 000 ₽",
-        postUrl: "https://t.me/LifeRideLife"
-      }
-    ];
-
-    async function fetchChannelPosts() {
+    // Загрузка товаров из файла products.json
+    async function loadProducts() {
+      const catalogEl = document.getElementById('catalog');
       try {
-        const response = await fetch('https://corsproxy.io/?https://t.me/s/LifeRideLife');
-        if (!response.ok) throw new Error('Proxy error');
+        const response = await fetch('./products.json?v=' + Date.now());
+        if (!response.ok) throw new Error('products.json not found');
         
-        const htmlText = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlText, 'text/html');
-        const messageElements = doc.querySelectorAll('.tgme_widget_message');
-
-        const parsed = [];
-        messageElements.forEach(msg => {
-          const textEl = msg.querySelector('.tgme_widget_message_text');
-          if (!textEl) return;
-
-          const text = textEl.innerText || textEl.textContent || '';
-          const tagsInText = text.match(/#[a-zA-Z0-9_а-яА-ЯёЁ]+/g) || [];
-          const lowerTags = tagsInText.map(t => t.toLowerCase());
-
-          const photoWrap = msg.querySelector('.tgme_widget_message_photo_wrap');
-          let imgUrl = 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600';
-          if (photoWrap) {
-            const styleAttr = photoWrap.getAttribute('style') || '';
-            const match = styleAttr.match(/background-image:url\('([^']+)'\)/);
-            if (match) imgUrl = match[1];
-          }
-
-          const linkEl = msg.querySelector('.tgme_widget_message_date');
-          const postUrl = linkEl ? linkEl.getAttribute('href') : 'https://t.me/LifeRideLife';
-
-          const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-          const title = lines[0] ? lines[0].replace(/#[^\s]+/g, '').trim() : 'Товар';
-          const priceMatch = text.match(/(\d[\d\s]*\s*₽|\d[\d\s]*\s*€|\d[\d\s]*\s*\$)/);
-          const price = priceMatch ? priceMatch[1] : 'По запросу';
-
-          parsed.push({
-            title: title || 'Товар LifeRideLife',
-            rawText: text.toLowerCase(),
-            tags: lowerTags,
-            originalTagsText: tagsInText.join(' '),
-            imgUrl: imgUrl,
-            price: price,
-            postUrl: postUrl
-          });
-        });
-
-        if (parsed.length > 0) {
-          postsData = parsed;
-        } else {
-          postsData = fallbackPosts;
-        }
+        postsData = await response.json();
+        renderCatalog();
       } catch (err) {
-        console.warn('Сеть недоступна, загружен резервный каталог:', err);
-        postsData = fallbackPosts;
+        console.error(err);
+        catalogEl.innerHTML = '<div class="status-msg">⚠️ Файл products.json еще не добавлен в репозиторий. Загрузите файл на GitHub.</div>';
       }
-
-      renderCatalog();
     }
 
     function renderCatalog() {
       const catalogEl = document.getElementById('catalog');
       
       const filtered = postsData.filter(post => {
+        // Проверка соответствия выбранным тегам
         for (let tag of selectedTags) {
           const cleanTag = tag.toLowerCase();
-          const tagExists = post.tags.some(t => t.includes(cleanTag)) || post.rawText.includes(cleanTag);
-          if (!tagExists) return false;
+          const raw = post.rawText ? post.rawText.toLowerCase() : '';
+          const tags = post.tags ? post.tags.map(t => t.toLowerCase()) : [];
+          
+          const match = tags.some(t => t.includes(cleanTag)) || raw.includes(cleanTag);
+          if (!match) return false;
         }
         return true;
       });
@@ -381,17 +318,17 @@
 
       catalogEl.innerHTML = filtered.map(post => `
         <div class="card">
-          <img src="${post.imgUrl}" class="card-img" alt="Product">
+          <img src="${post.imgUrl || 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600'}" class="card-img" alt="Product">
           <div class="card-body">
-            <div class="card-title">${post.title}</div>
+            <div class="card-title">${post.title || 'Товар LifeRideLife'}</div>
             <div class="card-tags">${post.originalTagsText || ''}</div>
             <div class="card-footer">
-              <div class="card-price">${post.price}</div>
-              <div class="badge">🟢 доступно</div>
+              <div class="card-price">${post.price || 'По запросу'}</div>
+              <div class="badge">🟢 в наличии / под заказ</div>
             </div>
             <div class="card-actions">
-              <a href="${post.postUrl}" target="_blank" class="btn btn-secondary">📖 Читать пост</a>
-              <a href="https://t.me/Piti4?text=${encodeURIComponent('Здравствуйте! Интересует: ' + post.title + '\n' + post.postUrl)}" target="_blank" class="btn btn-primary">💬 Обсудить модель</a>
+              <a href="${post.postUrl || 'https://t.me/LifeRideLife'}" target="_blank" class="btn btn-secondary">📖 Читать пост</a>
+              <a href="https://t.me/Piti4?text=${encodeURIComponent('Здравствуйте! Интересует: ' + (post.title || 'Товар') + '\n' + (post.postUrl || ''))}" target="_blank" class="btn btn-primary">💬 Обсудить модель</a>
             </div>
           </div>
         </div>
@@ -421,7 +358,7 @@
       window.Telegram.WebApp.expand();
     }
 
-    fetchChannelPosts();
+    loadProducts();
   </script>
 </body>
 </html>
