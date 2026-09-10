@@ -5,28 +5,45 @@ from bs4 import BeautifulSoup
 
 
 def extract_price(text):
-    # 1. Поиск схем с "к" / "k" (например: 180к, 250 k, 210.000k)
-    k_match = re.search(r"(\d+[\d\s\.]*)\s*[кkKК]\b", text)
+    # 1. Удаляем хэштеги, чтобы теги вида #150_250k не сбивали поиск
+    clean_text = re.sub(r"#[a-zA-Z0-9_а-яА-ЯёЁ]+", "", text)
+
+    # 2. Ищем ценовую строку по ключевым меткам из постов (💰 или "Цена:")
+    price_line_match = re.search(
+        r"(?:💰|Цена:?)\s*([\d\s\.]+\s*(?:₽|€|\$|руб|рублей|k|к)?)",
+        clean_text,
+        re.IGNORECASE,
+    )
+    if price_line_match:
+        found_price = price_line_match.group(1).strip()
+        # Приводим к красивому виду, если там просто цифры с пробелом
+        if re.search(r"\d", found_price):
+            if not re.search(r"(₽|€|\$|руб|k|к)", found_price, re.IGNORECASE):
+                found_price += " ₽"
+            return found_price
+
+    # 3. Ищем явные суммы с валютой в очищенном тексте (например: 248 000₽)
+    price_match = re.search(
+        r"(\d[\d\s\.]*)\s*(₽|€|\$|руб|рублей)", clean_text, re.IGNORECASE
+    )
+    if price_match:
+        val_str = price_match.group(1).strip()
+        unit = price_match.group(2)
+        if unit.lower() in ["руб", "рублей"]:
+            unit = "₽"
+        return f"{val_str} {unit}"
+
+    # 4. Поиск сумм с "к" / "k" (например: 248к), но НЕ из хэштегов
+    k_match = re.search(r"(\d+[\d\s\.]*)\s*[кkKК]\b", clean_text)
     if k_match:
         val = k_match.group(1).replace(" ", "").replace(".", "")
         try:
             return f"{int(val):,} ₽".replace(",", " ")
         except:
-            return f"{k_match.group(1)}k ₽"
+            return f"{k_match.group(1)} 000 ₽"
 
-    # 2. Поиск чисел с валютами, руб, rub
-    price_match = re.search(
-        r"(\d[\d\s\.]*)\s*(₽|€|\$|руб|рублей|rub)", text, re.IGNORECASE
-    )
-    if price_match:
-        val_str = price_match.group(1).strip()
-        unit = price_match.group(2)
-        if unit.lower() in ["руб", "рублей", "rub"]:
-            unit = "₽"
-        return f"{val_str} {unit}"
-
-    # 3. Поиск больших численных сумм от 10 000
-    num_match = re.search(r"(\b\d{2,3}[\s\.]?\d{3}\b)", text)
+    # 5. Поиск больших чисел от 10 000
+    num_match = re.search(r"(\b\d{2,3}[\s\.]?\d{3}\b)", clean_text)
     if num_match:
         return f"{num_match.group(1)} ₽"
 
@@ -106,7 +123,7 @@ def parse_channel():
                 re.sub(r"#[^\s]+", "", lines[0]).strip() if lines else "Товар"
             )
 
-            # Новый извлекатель цены
+            # Извлечение точной цены
             price = extract_price(text)
 
             all_posts.append(
