@@ -4,12 +4,41 @@ import urllib.request
 from bs4 import BeautifulSoup
 
 
+def extract_price(text):
+    # 1. Поиск схем с "к" / "k" (например: 180к, 250 k, 210.000k)
+    k_match = re.search(r"(\d+[\d\s\.]*)\s*[кkKК]\b", text)
+    if k_match:
+        val = k_match.group(1).replace(" ", "").replace(".", "")
+        try:
+            return f"{int(val):,} ₽".replace(",", " ")
+        except:
+            return f"{k_match.group(1)}k ₽"
+
+    # 2. Поиск чисел с валютами, руб, rub
+    price_match = re.search(
+        r"(\d[\d\s\.]*)\s*(₽|€|\$|руб|рублей|rub)", text, re.IGNORECASE
+    )
+    if price_match:
+        val_str = price_match.group(1).strip()
+        unit = price_match.group(2)
+        if unit.lower() in ["руб", "рублей", "rub"]:
+            unit = "₽"
+        return f"{val_str} {unit}"
+
+    # 3. Поиск больших численных сумм от 10 000
+    num_match = re.search(r"(\b\d{2,3}[\s\.]?\d{3}\b)", text)
+    if num_match:
+        return f"{num_match.group(1)} ₽"
+
+    return "По запросу"
+
+
 def parse_channel():
     all_posts = []
     before_id = None
     processed_ids = set()
 
-    print("🚀 Начинаем считывание ВСЕЙ истории канала @LifeRideLife...")
+    print("🚀 Начинаем считывание истории канала @LifeRideLife...")
 
     while True:
         url = "https://t.me/s/LifeRideLife"
@@ -33,7 +62,6 @@ def parse_channel():
             print("🏁 История закончилась!")
             break
 
-        new_count = 0
         min_msg_id = None
 
         for msg in messages:
@@ -78,10 +106,8 @@ def parse_channel():
                 re.sub(r"#[^\s]+", "", lines[0]).strip() if lines else "Товар"
             )
 
-            price_match = re.search(
-                r"(\d[\d\s]*\s*₽|\d[\d\s]*\s*€|\d[\d\s]*\s*\$)", text
-            )
-            price = price_match.group(1) if price_match else "По запросу"
+            # Новый извлекатель цены
+            price = extract_price(text)
 
             all_posts.append(
                 {
@@ -95,7 +121,6 @@ def parse_channel():
                     "postUrl": post_url,
                 }
             )
-            new_count += 1
 
         if min_msg_id is None or (before_id and min_msg_id >= before_id):
             break
@@ -105,9 +130,7 @@ def parse_channel():
     with open("products.json", "w", encoding="utf-8") as f:
         json.dump(all_posts, f, ensure_ascii=False, indent=2)
 
-    print(
-        f"🎉 ГОТОВО! Собрано {len(all_posts)} товаров и сохранено в products.json"
-    )
+    print(f"🎉 ГОТОВО! Собрано {len(all_posts)} товаров.")
 
 
 if __name__ == "__main__":
