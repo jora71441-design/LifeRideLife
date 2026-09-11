@@ -4,8 +4,13 @@ import html
 from aiohttp import web
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import InlineQueryResultArticle, InputTextMessageContent, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 
 TOKEN = os.getenv("BOT_TOKEN")
+# Render автоматически создает эту переменную с адресом вашего сервиса
+WEBHOOK_HOST = os.getenv("RENDER_EXTERNAL_URL", "https://liferidelife.onrender.com")
+WEBHOOK_PATH = "/webhook"
+WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
@@ -43,14 +48,12 @@ async def inline_query_handler(query: types.InlineQuery):
             raw_title = str(item.get("title") or item.get("name") or f"Товар #{idx+1}")
             raw_desc = str(item.get("description") or item.get("text") or item.get("size") or "")
             raw_price = str(item.get("price") or "")
-            link = str(item.get("link") or item.get("url") or "https://t.me/liferidelife_bot")
 
             search_content = f"{raw_title} {raw_desc} {raw_price}".lower()
 
             if user_text and user_text not in search_content:
                 continue
 
-            # Безопасное экранирование HTML-тегов из объявлений
             safe_title = html.escape(raw_title)
             safe_desc = html.escape(raw_desc)
             safe_price = html.escape(raw_price)
@@ -83,20 +86,23 @@ async def inline_query_handler(query: types.InlineQuery):
         print(f"[ERROR] Inline query crash: {e}")
         await query.answer([], cache_time=1, is_personal=False)
 
-async def handle_ping(request):
-    return web.Response(text="Bot is alive!")
+async def on_startup(bot: Bot):
+    await bot.set_webhook(WEBHOOK_URL, drop_pending_updates=True)
+    print(f"Webhook установлен на: {WEBHOOK_URL}")
 
-async def main():
+def main():
+    dp.startup.register(on_startup)
     app = web.Application()
-    app.router.add_get("/", handle_ping)
-    runner = web.AppRunner(app)
-    await runner.setup()
+    
+    webhook_requests_handler = SimpleRequestHandler(
+        dispatcher=dp,
+        bot=bot,
+    )
+    webhook_requests_handler.register(app, path=WEBHOOK_PATH)
+    setup_application(app, dp, bot=bot)
+    
     port = int(os.environ.get("PORT", 8080))
-    site = web.TCPSite(runner, "0.0.0.0", port)
-    await site.start()
-
-    await dp.start_polling(bot)
+    web.run_app(app, host="0.0.0.0", port=port)
 
 if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+    main()
