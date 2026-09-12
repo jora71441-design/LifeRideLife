@@ -277,118 +277,123 @@
   </div>
 
   <script>
-    let postsData = [];
-    let selectedTags = new Set();
-    let currentCategory = 'bikes';
+  let postsData = [];
+  let selectedTags = new Set();
+  let currentCategory = 'bikes';
 
-    // Интеграция Telegram WebApp и считывание start_param
-    if (window.Telegram && window.Telegram.WebApp) {
-      const tg = window.Telegram.WebApp;
-      tg.ready();
-      tg.expand();
+  // 1. Инициализация Telegram WebApp SDK и считывание start_param
+  if (window.Telegram && window.Telegram.WebApp) {
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
 
-      // Ждем небольшую задержку, чтобы DOM загрузился, и применяем параметр из диплинка
-      setTimeout(() => {
-        const startParam = tg.initDataUnsafe?.start_param;
-        if (startParam) {
-          setCategory(startParam);
-        }
-      }, 100);
+    const startParam = tg.initDataUnsafe?.start_param;
+    if (startParam) {
+      currentCategory = startParam;
+    }
+  }
+
+  // 2. Переключение вкладок категорий
+  function setCategory(cat) {
+    currentCategory = cat;
+    
+    // Подсветка активной кнопки меню
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.remove('active');
+      const onclickAttr = btn.getAttribute('onclick') || '';
+      if (onclickAttr.includes(`'${cat}'`)) {
+        btn.classList.add('active');
+      }
+    });
+
+    // Скрытие панели тегов для отзывов и гайдов
+    const filtersDiv = document.getElementById('filters');
+    if (filtersDiv) {
+      filtersDiv.style.display = (cat === 'reviews' || cat === 'guides') ? 'none' : 'block';
     }
 
-    // Измененная функция переключения вкладок
-    function setCategory(cat) {
-      currentCategory = cat;
+    renderCatalog();
+  }
+
+  // 3. Загрузка товаров из JSON
+  async function loadProducts() {
+    const catalogEl = document.getElementById('catalog');
+    try {
+      const response = await fetch('./products.json?v=' + Date.now());
+      if (!response.ok) throw new Error('products.json not found');
       
-      // 1. Обновляем активную кнопку визуально
-      document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.getAttribute('onclick').includes(`'${cat}'`)) {
-          btn.classList.add('active');
-        }
-      });
+      postsData = await response.json();
+      setCategory(currentCategory);
+    } catch (err) {
+      console.error(err);
+      catalogEl.innerHTML = '<div class="status-msg">⚠️ Ошибка загрузки базы товаров. Проверьте наличиe products.json.</div>';
+    }
+  }
 
-      // 2. Скрываем фильтры, если перешли в отзывы или гайды (там фильтры по росту не нужны)
-      const filtersDiv = document.getElementById('filters');
-      if (cat === 'reviews' || cat === 'guides') {
-        filtersDiv.style.display = 'none';
-      } else {
-        filtersDiv.style.display = 'block';
+  // 4. Фильтрация и рендеринг карточек
+  function renderCatalog() {
+    const catalogEl = document.getElementById('catalog');
+    
+    const filtered = postsData.filter(post => {
+      const cat = (post.category || 'bikes').toLowerCase();
+      const tags = (post.tags || []).map(t => t.toLowerCase());
+      const raw = (post.rawText || '').toLowerCase();
+
+      // Строгое соответствие выбранной вкладке
+      if (currentCategory === 'bikes' && cat !== 'bikes') return false;
+      if (currentCategory === 'upgrade_kits' && cat !== 'upgrade_kits') return false;
+      if (currentCategory === 'components' && cat !== 'components') return false;
+      if (currentCategory === 'guides' && cat !== 'guides') return false;
+      if (currentCategory === 'reviews' && cat !== 'reviews') return false;
+
+      // Фильтрация по выбранным тегам (бренд, навеска, рост)
+      for (let tag of selectedTags) {
+        const cleanTag = tag.toLowerCase().replace('к', 'k');
+        const match = tags.some(t => t.includes(cleanTag)) || raw.includes(cleanTag);
+        if (!match) return false;
       }
 
-      // 3. Рендерим каталог с учетом новой категории
-      renderCatalog();
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      catalogEl.innerHTML = '<div class="status-msg">🚴‍♂️ Ничего не найдено по выбранным фильтрам</div>';
+      return;
     }
 
-    // Загрузка товаров из файла products.json
-    async function loadProducts() {
-      const catalogEl = document.getElementById('catalog');
-      try {
-        const response = await fetch('./products.json?v=' + Date.now());
-        if (!response.ok) throw new Error('products.json not found');
-        
-        postsData = await response.json();
-        renderCatalog();
-      } catch (err) {
-        console.error(err);
-        catalogEl.innerHTML = '<div class="status-msg">⚠️ Файл products.json еще не добавлен в репозиторий. Загрузите файл на GitHub.</div>';
-      }
-    }
-
-    function renderCatalog() {
-      const catalogEl = document.getElementById('catalog');
-      
-      // Здесь в будущем можно добавить фильтрацию по currentCategory (post.category === currentCategory),
-      // если в products.json будет поле category. Пока фильтруем только по тегам.
-      const filtered = postsData.filter(post => {
-        // Проверка соответствия выбранным тегам
-        for (let tag of selectedTags) {
-          const cleanTag = tag.toLowerCase();
-          const raw = post.rawText ? post.rawText.toLowerCase() : '';
-          const tags = post.tags ? post.tags.map(t => t.toLowerCase()) : [];
-          
-          const match = tags.some(t => t.includes(cleanTag)) || raw.includes(cleanTag);
-          if (!match) return false;
-        }
-        return true;
-      });
-
-      if (filtered.length === 0) {
-        catalogEl.innerHTML = '<div class="status-msg">🚴‍♂️ Ничего не найдено по выбранным фильтрам</div>';
-        return;
-      }
-
-      catalogEl.innerHTML = filtered.map(post => `
-        <div class="card">
-          <img src="${post.imgUrl || 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600'}" class="card-img" alt="Product">
-          <div class="card-body">
-            <div class="card-title">${post.title || 'Товар LifeRideLife'}</div>
-            <div class="card-tags">${post.originalTagsText || ''}</div>
-            <div class="card-footer">
-              <div class="card-price">${post.price || 'По запросу'}</div>
-              <div class="badge">🟢 в наличии / под заказ</div>
-            </div>
-            <div class="card-actions">
-              <a href="${post.postUrl || 'https://t.me/LifeRideLife'}" target="_blank" class="btn btn-secondary">📖 Читать пост</a>
-              <a href="https://t.me/Piti4?text=${encodeURIComponent('Здравствуйте! Интересует: ' + (post.title || 'Товар') + '\n' + (post.postUrl || ''))}" target="_blank" class="btn btn-primary">💬 Обсудить модель</a>
-            </div>
+    catalogEl.innerHTML = filtered.map(post => `
+      <div class="card">
+        <img src="${post.imgUrl || 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600'}" class="card-img" alt="Product">
+        <div class="card-body">
+          <div class="card-title">${post.title || 'Товар LifeRideLife'}</div>
+          <div class="card-tags">${post.originalTagsText || ''}</div>
+          <div class="card-footer">
+            <div class="card-price">${post.price || 'По запросу'}</div>
+            <div class="badge">🟢 в наличии / под заказ</div>
+          </div>
+          <div class="card-actions">
+            <a href="${post.postUrl || 'https://t.me/LifeRideLife'}" target="_blank" class="btn btn-secondary">📖 Читать пост</a>
+            <a href="https://t.me/Piti4?text=${encodeURIComponent('Здравствуйте! Интересует: ' + (post.title || 'Товар') + '\n' + (post.postUrl || ''))}" target="_blank" class="btn btn-primary">💬 Обсудить модель</a>
           </div>
         </div>
-      `).join('');
-    }
+      </div>
+    `).join('');
+  }
 
-    function toggleTag(el, tag) {
-      if (selectedTags.has(tag)) {
-        selectedTags.delete(tag);
-        el.classList.remove('active');
-      } else {
-        selectedTags.add(tag);
-        el.classList.add('active');
-      }
-      renderCatalog();
+  function toggleTag(el, tag) {
+    if (selectedTags.has(tag)) {
+      selectedTags.delete(tag);
+      el.classList.remove('active');
+    } else {
+      selectedTags.add(tag);
+      el.classList.add('active');
     }
+    renderCatalog();
+  }
 
-    loadProducts();
+  loadProducts();
+</script>
+;
   </script>
 </body>
 </html>
