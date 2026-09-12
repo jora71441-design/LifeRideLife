@@ -2,20 +2,21 @@ name: Update Catalog Data
 
 on:
   schedule:
-    # Запуск каждые 6 часов (автоматически)
     - cron: '0 */6 * * *'
-  # Возможность запустить вручную одной кнопкой
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Чеккаут репозитория
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Настройка Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
