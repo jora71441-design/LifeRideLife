@@ -4,50 +4,80 @@ import urllib.request
 from bs4 import BeautifulSoup
 
 
-def extract_price(text):
-    # 1. Удаляем хэштеги, чтобы теги вида #150_250k не сбивали поиск
-    clean_text = re.sub(r"#[a-zA-Z0-9_а-яА-ЯёЁ]+", "", text)
+def clean_text(text):
+    if not text:
+        return ""
+    # Удаляем скрытые невидимые символы
+    text = text.replace('\u200b', '').replace('\ufeff', '')
+    return text.strip()
 
-    # 2. Ищем ценовую строку по ключевым меткам из постов (💰 или "Цена:")
+
+def extract_price(text):
+    clean_t = re.sub(r"#[a-zA-Z0-9_а-яА-ЯёЁ]+", "", text)
+
     price_line_match = re.search(
         r"(?:💰|Цена:?)\s*([\d\s\.]+\s*(?:₽|€|\$|руб|рублей|k|к)?)",
-        clean_text,
+        clean_t,
         re.IGNORECASE,
     )
     if price_line_match:
         found_price = price_line_match.group(1).strip()
-        # Приводим к красивому виду, если там просто цифры с пробелом
         if re.search(r"\d", found_price):
+            found_price = re.sub(r"(\d)\.(\d{3})", r"\1 \2", found_price)
             if not re.search(r"(₽|€|\$|руб|k|к)", found_price, re.IGNORECASE):
                 found_price += " ₽"
             return found_price
 
-    # 3. Ищем явные суммы с валютой в очищенном тексте (например: 248 000₽)
     price_match = re.search(
-        r"(\d[\d\s\.]*)\s*(₽|€|\$|руб|рублей)", clean_text, re.IGNORECASE
+        r"(\d[\d\s\.]*)\s*(₽|€|\$|руб|рублей)", clean_t, re.IGNORECASE
     )
     if price_match:
-        val_str = price_match.group(1).strip()
+        val_str = price_match.group(1).strip().replace(".", " ")
         unit = price_match.group(2)
         if unit.lower() in ["руб", "рублей"]:
             unit = "₽"
         return f"{val_str} {unit}"
 
-    # 4. Поиск сумм с "к" / "k" (например: 248к), но НЕ из хэштегов
-    k_match = re.search(r"(\d+[\d\s\.]*)\s*[кkKК]\b", clean_text)
+    k_match = re.search(r"(\d+[\d\s\.]*)\s*[кkKК]\b", clean_t)
     if k_match:
         val = k_match.group(1).replace(" ", "").replace(".", "")
         try:
             return f"{int(val):,} ₽".replace(",", " ")
-        except:
+        except Exception:
             return f"{k_match.group(1)} 000 ₽"
 
-    # 5. Поиск больших чисел от 10 000
-    num_match = re.search(r"(\b\d{2,3}[\s\.]?\d{3}\b)", clean_text)
+    num_match = re.search(r"(\b\d{2,3}[\s\.]?\d{3}\b)", clean_t)
     if num_match:
-        return f"{num_match.group(1)} ₽"
+        val = num_match.group(1).replace(".", " ")
+        return f"{val} ₽"
 
     return "По запросу"
+
+
+def determine_category(tags_lower, raw_text_lower):
+    """Автоматическое определение категории поста"""
+    if any(t in tags_lower for t in ["#отзыв", "#отзывы", "#покупка"]) or "отзыв" in raw_text_lower:
+        return "reviews"
+    if any(t in tags_lower for t in ["#гайд", "#гайды", "#полезно", "#ростовка", "#обслуживание"]) or "гайд" in raw_text_lower:
+        return "guides"
+    if any(t in tags_lower for t in ["#фреймсет", "#kit", "#upgrade", "#комплект"]):
+        return "upgrade_kits"
+    if any(t in tags_lower for t in ["#запчасти", "#компоненты", "#групсет", "#колеса", "#руль", "#седло"]):
+        return "components"
+    return "bikes"
+
+
+def extract_title(text):
+    """Поиск реального названия товара без эмодзи и статусов 'ПРОДАН'"""
+    lines = [clean_text(l) for l in text.split("\n") if clean_text(l)]
+    for line in lines:
+        clean_line = re.sub(r"#[^\s]+", "", line).strip()
+        clean_line_no_emoji = re.sub(r"[^\w\s\d-]", "", clean_line).strip()
+        
+        # Пропускаем пустые строки, чисто эмодзи и статусы "ПРОДАН"
+        if clean_line_no_emoji and not re.match(r"^(продан|продано)$", clean_line_no_emoji.lower()):
+            return clean_line
+    return "Товар LifeRideLife"
 
 
 def parse_channel():
@@ -101,8 +131,8 @@ def parse_channel():
             if not text_el:
                 continue
 
-            text = text_el.get_text("\n")
-            tags = re.findall(r"#[a-zA-Z0-9_а-яА-ЯёЁ]+", text)
+            raw_text = clean_text(text_el.get_text("\n"))
+            tags = re.findall(r"#[a-zA-Z0-9_а-яА-ЯёЁ]+", raw_text)
 
             if not tags:
                 continue
@@ -118,20 +148,26 @@ def parse_channel():
                 if match:
                     img_url = match[1]
 
-            lines = [l.strip() for l in text.split("\n") if l.strip()]
-            title = (
-                re.sub(r"#[^\s]+", "", lines[0]).strip() if lines else "Товар"
-            )
+            title = extract_title(raw_text)
+            price = extract_price(raw_text)
+            
+            # Нормализация хэштегов (заменяем 'к' на 'k' в бюджетах для единообразия)
+            normalized_tags = []
+            for t in tags:
+                t_lower = t.lower()
+                t_lower = re.sub(r"#(\d+_\d+)к$", r"#\1k", t_lower)
+                normalized_tags.append(t_lower)
 
-            # Извлечение точной цены
-            price = extract_price(text)
+            raw_text_lower = raw_text.lower()
+            category = determine_category(normalized_tags, raw_text_lower)
 
             all_posts.append(
                 {
                     "id": msg_id,
-                    "title": title or "Товар LifeRideLife",
-                    "rawText": text,
-                    "tags": [t.lower() for t in tags],
+                    "title": title,
+                    "category": category,
+                    "rawText": raw_text,
+                    "tags": normalized_tags,
                     "originalTagsText": " ".join(tags),
                     "imgUrl": img_url,
                     "price": price,
