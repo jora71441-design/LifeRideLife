@@ -287,7 +287,11 @@
     tg.ready();
     tg.expand();
 
-    const startParam = tg.initDataUnsafe?.start_param;
+    // Считываем категорию из хвоста ссылки (?cat=bikes) или из внутренней системы Telegram
+    const urlParams = new URLSearchParams(window.location.search);
+    const catParam = urlParams.get('cat');
+    const startParam = tg.initDataUnsafe?.start_param || catParam;
+    
     if (startParam) {
       currentCategory = startParam;
     }
