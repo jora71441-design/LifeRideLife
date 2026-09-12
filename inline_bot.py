@@ -1,7 +1,13 @@
 import os
 from aiohttp import web
 from aiogram import Bot, Dispatcher, types
-from aiogram.types import InlineQueryResultArticle, InputTextMessageContent, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import (
+    InlineQueryResultArticle, 
+    InputTextMessageContent, 
+    InlineKeyboardMarkup, 
+    InlineKeyboardButton,
+    WebAppInfo
+)
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 
 TOKEN = os.getenv("BOT_TOKEN")
@@ -72,16 +78,15 @@ async def inline_query_handler(query: types.InlineQuery):
                     ),
                     reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
                         InlineKeyboardButton(
-    text=nav["btn_text"], 
-    web_app=types.WebAppInfo(
-        url=f"https://jora71441-design.github.io/LifeRideLife/?cat={nav['param']}"
-    )
-)
+                            text=nav["btn_text"], 
+                            web_app=WebAppInfo(
+                                url=f"https://jora71441-design.github.io/LifeRideLife/?cat={nav['param']}"
+                            )
+                        )
                     ]])
                 )
             )
 
-        # cache_time=0 для моментального обновления без задержек Telegram
         await query.answer(results, cache_time=0, is_personal=False)
         
     except Exception as e:
