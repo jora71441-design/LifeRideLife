@@ -327,10 +327,10 @@
       if (!response.ok) throw new Error('products.json not found');
       
       postsData = await response.json();
-      setCategory(currentCategory);
+      renderCatalog();
     } catch (err) {
       console.error(err);
-      catalogEl.innerHTML = '<div class="status-msg">⚠️ Ошибка загрузки базы товаров. Проверьте наличиe products.json.</div>';
+      catalogEl.innerHTML = '<div class="status-msg">⚠️ Ошибка загрузки базы товаров. Проверьте наличие products.json.</div>';
     }
   }
 
@@ -395,7 +395,9 @@
     renderCatalog();
   }
 
+    setCategory(currentCategory);
   loadProducts();
+
   </script>
 </body>
 </html>
