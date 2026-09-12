@@ -33,12 +33,78 @@ def get_products():
         print(f"[ERROR] Ошибка чтения JSON: {e}")
     return []
 
+
 @dp.inline_query()
 async def inline_query_handler(query: types.InlineQuery):
     user_text = query.query.strip().lower()
     results = []
     
     try:
+        # 1. Если текст пустой — формируем навигационное меню разделами
+        if not user_text:
+            nav_items = [
+                {
+                    "id": "nav_bikes",
+                    "title": "🔍 Найти свой вел",
+                    "desc": "Подбор велосипедов по росту, бренду и бюджету",
+                    "text": "🚲 Нажмите ниже, чтобы запустить подбор велосипеда:",
+                    "btn_text": "🚲 Открыть подбор велосипедов",
+                    "param": "bikes"
+                },
+                {
+                    "id": "nav_kits",
+                    "title": "⚡ Upgrade Kits",
+                    "desc": "Готовые комплекты для апгрейда и фреймсеты",
+                    "text": "⚡ Выберите готовый Upgrade Kit для вашего байка:",
+                    "btn_text": "⚡ Перейти к Upgrade Kits",
+                    "param": "upgrade_kits"
+                },
+                {
+                    "id": "nav_components",
+                    "title": "⚙️ Комплектуха",
+                    "desc": "Групсеты, колеса, рули и компоненты",
+                    "text": "⚙️ Перейдите в каталог запчастей и комплектующих:",
+                    "btn_text": "⚙️ Открыть комплектующие",
+                    "param": "components"
+                },
+                {
+                    "id": "nav_useful",
+                    "title": "💡 Полезности",
+                    "desc": "Гайды по выбору ростовки, обслуживание и таблицы",
+                    "text": "💡 Полезная база знаний LifeRideLife:",
+                    "btn_text": "💡 Читать полезности",
+                    "param": "guides"
+                },
+                {
+                    "id": "nav_reviews",
+                    "title": "⭐️ Отзывы",
+                    "desc": "Отзывы покупателей и выполненные заказы",
+                    "text": "⭐️ Отзывы наших клиентов и истории доставок:",
+                    "btn_text": "⭐️ Читать отзывы",
+                    "param": "reviews"
+                }
+            ]
+
+            for nav in nav_items:
+                results.append(
+                    InlineQueryResultArticle(
+                        id=nav["id"],
+                        title=nav["title"],
+                        description=nav["desc"],
+                        input_message_content=InputTextMessageContent(
+                            message_text=f"<b>{nav['title']}</b>\n\n{nav['text']}",
+                            parse_mode="HTML"
+                        ),
+                        reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
+                            InlineKeyboardButton(
+                                text=nav["btn_text"], 
+                                url=f"https://t.me/liferidelife_bot/app?startapp={nav['param']}"
+                            )
+                        ]])
+                    )
+                )
+
+        # 2. Дальше подтягиваем обычный поиск по товарам
         products = get_products()
 
         for idx, item in enumerate(products):
@@ -51,6 +117,7 @@ async def inline_query_handler(query: types.InlineQuery):
 
             search_content = f"{raw_title} {raw_desc} {raw_price}".lower()
 
+            # Если пользователь ввел поисковый запрос (например "sram"), фильтруем
             if user_text and user_text not in search_content:
                 continue
 
@@ -74,7 +141,10 @@ async def inline_query_handler(query: types.InlineQuery):
                         parse_mode="HTML"
                     ),
                     reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
-                        InlineKeyboardButton(text="🚴‍♂️ Открыть в Mini App", url="https://t.me/liferidelife_bot/app")
+                        InlineKeyboardButton(
+                            text="🚴‍♂️ Открыть в Mini App", 
+                            url="https://t.me/liferidelife_bot/app"
+                        )
                     ]])
                 )
             )
@@ -85,6 +155,7 @@ async def inline_query_handler(query: types.InlineQuery):
     except Exception as e:
         print(f"[ERROR] Inline query crash: {e}")
         await query.answer([], cache_time=1, is_personal=False)
+
 
 async def on_startup(bot: Bot):
     await bot.set_webhook(WEBHOOK_URL, drop_pending_updates=True)
