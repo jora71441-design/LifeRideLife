@@ -5,7 +5,6 @@ from aiogram.types import InlineQueryResultArticle, InputTextMessageContent, Inl
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 
 TOKEN = os.getenv("BOT_TOKEN")
-# Render автоматически создает эту переменную с адресом вашего сервиса
 WEBHOOK_HOST = os.getenv("RENDER_EXTERNAL_URL", "https://liferidelife.onrender.com")
 WEBHOOK_PATH = "/webhook"
 WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
@@ -18,7 +17,6 @@ async def inline_query_handler(query: types.InlineQuery):
     results = []
     
     try:
-        # Статичный список из 5 пунктов меню
         nav_items = [
             {
                 "id": "nav_bikes",
@@ -81,10 +79,8 @@ async def inline_query_handler(query: types.InlineQuery):
                 )
             )
 
-        # Увеличил cache_time до 300 секунд (5 минут). 
-        # Так как меню больше не меняется от введенного текста, Telegram закеширует ответ,
-        # и меню будет выпадать мгновенно без постоянных запросов к нашему серверу.
-        await query.answer(results, cache_time=300, is_personal=False)
+        # cache_time=0 для моментального обновления без задержек Telegram
+        await query.answer(results, cache_time=0, is_personal=False)
         
     except Exception as e:
         print(f"[ERROR] Inline query crash: {e}")
