@@ -77,13 +77,14 @@ async def inline_query_handler(query: types.InlineQuery):
                         parse_mode="HTML"
                     ),
                     reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
-                        InlineKeyboardButton(
-                            text=nav["btn_text"], 
-                            web_app=WebAppInfo(
-                                url=f"https://jora71441-design.github.io/LifeRideLife/?cat={nav['param']}"
-                            )
-                        )
-                    ]])
+    InlineKeyboardButton(
+        text=nav["btn_text"], 
+        web_app=WebAppInfo(
+            url=f"https://jora71441-design.github.io/LifeRideLife/?cat={nav['param']}"
+        )
+    )
+]])
+
                 )
             )
 
