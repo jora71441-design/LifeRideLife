@@ -174,12 +174,13 @@
 
   <div class="banner">🔥 Предзаказ сезона 2027</div>
 
-  <!-- Главные категории -->
+  <!-- Главные категории (добавил Полезности для полного совпадения с ботом) -->
   <div class="tabs">
-    <button class="tab-btn active" onclick="setCategory(event, 'bikes')">🚲 Велосипеды</button>
-    <button class="tab-btn" onclick="setCategory(event, 'upgrade')">⚡ Upgrade Kits</button>
-    <button class="tab-btn" onclick="setCategory(event, 'components')">⚙️ Комплектующие</button>
-    <button class="tab-btn" onclick="setCategory(event, 'reviews')">⭐ Отзывы</button>
+    <button class="tab-btn active" onclick="setCategory('bikes')">🚲 Велосипеды</button>
+    <button class="tab-btn" onclick="setCategory('upgrade_kits')">⚡ Upgrade Kits</button>
+    <button class="tab-btn" onclick="setCategory('components')">⚙️ Комплектующие</button>
+    <button class="tab-btn" onclick="setCategory('guides')">💡 Полезности</button>
+    <button class="tab-btn" onclick="setCategory('reviews')">⭐ Отзывы</button>
   </div>
 
   <!-- Расширенные фильтры -->
@@ -280,6 +281,45 @@
     let selectedTags = new Set();
     let currentCategory = 'bikes';
 
+    // Интеграция Telegram WebApp и считывание start_param
+    if (window.Telegram && window.Telegram.WebApp) {
+      const tg = window.Telegram.WebApp;
+      tg.ready();
+      tg.expand();
+
+      // Ждем небольшую задержку, чтобы DOM загрузился, и применяем параметр из диплинка
+      setTimeout(() => {
+        const startParam = tg.initDataUnsafe?.start_param;
+        if (startParam) {
+          setCategory(startParam);
+        }
+      }, 100);
+    }
+
+    // Измененная функция переключения вкладок
+    function setCategory(cat) {
+      currentCategory = cat;
+      
+      // 1. Обновляем активную кнопку визуально
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('onclick').includes(`'${cat}'`)) {
+          btn.classList.add('active');
+        }
+      });
+
+      // 2. Скрываем фильтры, если перешли в отзывы или гайды (там фильтры по росту не нужны)
+      const filtersDiv = document.getElementById('filters');
+      if (cat === 'reviews' || cat === 'guides') {
+        filtersDiv.style.display = 'none';
+      } else {
+        filtersDiv.style.display = 'block';
+      }
+
+      // 3. Рендерим каталог с учетом новой категории
+      renderCatalog();
+    }
+
     // Загрузка товаров из файла products.json
     async function loadProducts() {
       const catalogEl = document.getElementById('catalog');
@@ -298,6 +338,8 @@
     function renderCatalog() {
       const catalogEl = document.getElementById('catalog');
       
+      // Здесь в будущем можно добавить фильтрацию по currentCategory (post.category === currentCategory),
+      // если в products.json будет поле category. Пока фильтруем только по тегам.
       const filtered = postsData.filter(post => {
         // Проверка соответствия выбранным тегам
         for (let tag of selectedTags) {
@@ -344,18 +386,6 @@
         el.classList.add('active');
       }
       renderCatalog();
-    }
-
-    function setCategory(event, cat) {
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      event.currentTarget.classList.add('active');
-      currentCategory = cat;
-      renderCatalog();
-    }
-
-    if (window.Telegram && window.Telegram.WebApp) {
-      window.Telegram.WebApp.ready();
-      window.Telegram.WebApp.expand();
     }
 
     loadProducts();
