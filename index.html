@@ -418,6 +418,67 @@
       currentCategory = startParam;
     }
   }
+ // === 1.1. ЛОГИКА И РАСЧЕТЫ КАЛЬКУЛЯТОРА (Вставляем СЮДА) ===
+      let currentBikeType = 'road_race';
+
+  const bikeFactors = {
+    'road_race': 0.665,
+    'endurance': 0.65,
+    'gravel': 0.63
+  };
+
+  function setType(type) {
+    currentBikeType = type;
+    document.getElementById('btn-road').classList.toggle('active', type === 'road_race');
+    document.getElementById('btn-endurance').classList.toggle('active', type === 'endurance');
+    document.getElementById('btn-gravel').classList.toggle('active', type === 'gravel');
+    updateCalc();
+  }
+
+  function updateCalc() {
+    const heightEl = document.getElementById('calc-height');
+    const inseamEl = document.getElementById('calc-inseam');
+    if (!heightEl || !inseamEl) return;
+
+    const height = parseInt(heightEl.value);
+    const inseam = parseInt(inseamEl.value);
+
+    document.getElementById('val-height').innerText = height;
+    document.getElementById('val-inseam').innerText = inseam;
+
+    const saddleHeight = (inseam * 0.883).toFixed(1);
+    document.getElementById('res-saddle').innerText = `${saddleHeight} см`;
+
+    const factor = bikeFactors[currentBikeType];
+    const rawSize = Math.round(inseam * factor);
+    
+    let letterSize = 'M';
+    if (rawSize < 50) letterSize = 'XS';
+    else if (rawSize < 53) letterSize = 'S';
+    else if (rawSize < 56) letterSize = 'M';
+    else if (rawSize < 59) letterSize = 'L';
+    else letterSize = 'XL';
+
+    document.getElementById('res-size').innerText = `${rawSize} см (${letterSize})`;
+
+    const ratio = inseam / height;
+    let anatomyText = "";
+    let tipText = "";
+
+    if (ratio > 0.470) {
+      anatomyText = "🦵 Длинные ноги относительно торса (высокий инсим).";
+      tipText = "Если вы между двумя размерами — выбирайте меньшую раму. Длину посадки компенсируйте высотой седла, а Reach регулируйте выносом 80–90 мм.";
+    } else if (ratio < 0.445) {
+      anatomyText = "🏃‍♂️ Удлиненный торс относительно длины ног.";
+      tipText = "Рама выбирается с акцентом на Reach (длину). Рассмотрите смежный больший размер или увеличьте длину выноса до 110–120 мм.";
+    } else {
+      anatomyText = "⚖️ Пропорциональное телосложение (стандартный антропометрический баланс).";
+      tipText = "Вам подходит стандартная размерная сетка. Рекомендуемая базовая длина выноса: 100–110 мм.";
+    }
+
+    document.getElementById('res-anatomy').innerText = anatomyText;
+    document.getElementById('res-tip').innerText = tipText;
+  }
 
   // 2. Переключение вкладок категорий
   function setCategory(cat) {
