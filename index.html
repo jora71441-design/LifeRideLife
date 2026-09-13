@@ -287,7 +287,6 @@
     tg.ready();
     tg.expand();
 
-    // Считываем категорию из хвоста ссылки (?cat=bikes) или из внутренней системы Telegram
     const urlParams = new URLSearchParams(window.location.search);
     const catParam = urlParams.get('cat');
     const startParam = tg.initDataUnsafe?.start_param || catParam;
@@ -305,7 +304,9 @@
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.classList.remove('active');
       const onclickAttr = btn.getAttribute('onclick') || '';
-      if (onclickAttr.includes(`'${cat}'`)) {
+      const dataCat = btn.getAttribute('data-cat') || '';
+      
+      if (dataCat === cat || onclickAttr.includes(`'${cat}'`)) {
         btn.classList.add('active');
       }
     });
@@ -350,7 +351,7 @@
       if (currentCategory === 'guides' && cat !== 'guides') return false;
       if (currentCategory === 'reviews' && cat !== 'reviews') return false;
 
-      // Фильтрация по выбранным тегам (бренд, навеска, рост)
+      // Фильтрация по выбранным тегам
       for (let tag of selectedTags) {
         const cleanTag = tag.toLowerCase().replace('к', 'k');
         const match = tags.some(t => t.includes(cleanTag)) || raw.includes(cleanTag);
@@ -395,9 +396,11 @@
     renderCatalog();
   }
 
+  // 5. Запуск при полной готовности DOM
+  document.addEventListener("DOMContentLoaded", () => {
     setCategory(currentCategory);
-  loadProducts();
-
-  </script>
+    loadProducts();
+  });
+</script>
 </body>
 </html>
