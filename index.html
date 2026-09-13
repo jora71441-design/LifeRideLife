@@ -309,11 +309,11 @@
       </div>
     </div>
 
-    <!-- Результаты -->
+        <!-- Результаты -->
     <div class="calc-results">
       <div class="res-item">
-        <span class="res-label">Размер рамы (C-T)</span>
-        <span class="res-val" id="res-size">54 см (M)</span>
+        <span class="res-label">Рекомендуемое ETT</span>
+        <span class="res-val" id="res-size">535–550 мм (S/M)</span>
       </div>
       <div class="res-item">
         <span class="res-label">Высота седла (метод LeMond)</span>
@@ -327,11 +327,6 @@
         <span class="res-label">Рекомендация по подбору и посадке</span>
         <span class="res-desc" id="res-tip">Стандартная геометрия, вынос 100–110 мм.</span>
       </div>
-          <!-- Кнопка перехода к подбору -->
-    <div style="margin-top: 16px;">
-      <button type="button" class="btn btn-primary" id="btn-show-matched-bikes" onclick="applyMatchedBikeFilter()" style="width: 100%; padding: 12px; font-weight: 700; font-size: 0.9rem;">
-        🚴 Подобрали для тебя! (170–180 см)
-      </button>
     </div>
 
     </div>
@@ -470,6 +465,47 @@
     setCategory('bikes');
   }
 
+    // 1. Таблица рекомендуемого ETT под рост и тип байка
+  const sizeTable = [
+    {
+      minH: 155, maxH: 162,
+      road_race: "500–510 мм (XXS)",
+      endurance: "505–515 мм (XXS)",
+      gravel:    "505–520 мм (XXS)"
+    },
+    {
+      minH: 163, maxH: 170,
+      road_race: "515–530 мм (XS)",
+      endurance: "520–535 мм (XS/S)",
+      gravel:    "525–540 мм (XS)"
+    },
+    {
+      minH: 171, maxH: 178,
+      road_race: "535–550 мм (S/M)",
+      endurance: "540–555 мм (M)",
+      gravel:    "545–560 мм (S/M)"
+    },
+    {
+      minH: 179, maxH: 186,
+      road_race: "555–570 мм (M/L)",
+      endurance: "560–575 мм (L)",
+      gravel:    "565–580 мм (M/L)"
+    },
+    {
+      minH: 187, maxH: 194,
+      road_race: "575–590 мм (L/XL)",
+      endurance: "580–595 мм (XL)",
+      gravel:    "585–605 мм (XL)"
+    },
+    {
+      minH: 195, maxH: 205,
+      road_race: "595–615 мм (XXL)",
+      endurance: "600–615 мм (XXL)",
+      gravel:    "605–625 мм (XXL)"
+    }
+  ];
+
+  // 2. Основная функция перерасчета значений
   function updateCalc() {
     const heightEl = document.getElementById('calc-height');
     const inseamEl = document.getElementById('calc-inseam');
@@ -478,51 +514,52 @@
     const height = parseInt(heightEl.value);
     const inseam = parseInt(inseamEl.value);
 
+    // Обновляем цифры над ползунками
     const valHeight = document.getElementById('val-height');
     const valInseam = document.getElementById('val-inseam');
     if (valHeight) valHeight.innerText = height;
     if (valInseam) valInseam.innerText = inseam;
 
-    // Высота седла по методу Грега Лемонда
+    // Расчет высоты седла по LeMond
     const saddleHeight = (inseam * 0.883).toFixed(1);
     const resSaddle = document.getElementById('res-saddle');
     if (resSaddle) resSaddle.innerText = `${saddleHeight} см`;
 
-    // Расчет высоты рамы C-T
-    const factor = bikeFactors[currentBikeType] || 0.665;
-    const rawSize = Math.round(inseam * factor);
-    
-    let letterSize = 'M';
-    if (rawSize < 50) letterSize = 'XS';
-    else if (rawSize < 53) letterSize = 'S';
-    else if (rawSize < 56) letterSize = 'M';
-    else if (rawSize < 59) letterSize = 'L';
-    else letterSize = 'XL';
+    // Поиск диапазона ETT в таблице по росту
+    let matchedData = sizeTable.find(row => height >= row.minH && height <= row.maxH);
+    if (!matchedData) {
+      matchedData = height < 155 ? sizeTable[0] : sizeTable[sizeTable.length - 1];
+    }
 
+    const typeKey = currentBikeType || 'road_race';
+    const ettResult = matchedData[typeKey] || matchedData['road_race'];
+
+    // Выводим ETT в карточку результатов
     const resSize = document.getElementById('res-size');
-    if (resSize) resSize.innerText = `${rawSize} см (${letterSize})`;
+    if (resSize) resSize.innerText = ettResult;
 
-    // Анатомический анализ пропорций
+    // Анализ пропорций (Отношение Инсима к Росту)
     const ratio = inseam / height;
     let anatomyText = "";
     let tipText = "";
 
     if (ratio > 0.470) {
       anatomyText = "🦵 Длинные ноги относительно торса (высокий инсим).";
-      tipText = "Если вы между двумя размерами — выбирайте меньшую раму. Длину посадки компенсируйте высотой седла, а Reach регулируйте выносом 80–90 мм.";
+      tipText = "При пограничном росте выбирайте меньшую нижнюю границу ETT. Длину посадки компенсируйте высотой седла, а Reach регулируйте выносом 80–90 мм.";
     } else if (ratio < 0.445) {
       anatomyText = "🏃‍♂️ Удлиненный торс относительно длины ног.";
-      tipText = "Рама выбирается с акцентом на Reach (длину). Рассмотрите смежный больший размер или увеличьте длину выноса до 110–120 мм.";
+      tipText = "Рама выбирается с акцентом на ETT (длину). Рассмотрите верхнее значение диапазона ETT или увеличьте длину выноса до 110–120 мм.";
     } else {
-      anatomyText = "⚖️ Пропорциональное телосложение.";
-      tipText = "Вам подходит стандартная размерная сетка. Рекомендуемая базовая длина выноса: 100–110 мм.";
+      anatomyText = "⚖️ Пропорциональное телосложение (стандартный антропометрический баланс).";
+      tipText = "Вам идеально подходит указанный диапазон ETT. Рекомендуемая базовая длина выноса: 100–110 мм.";
     }
 
     const resAnatomy = document.getElementById('res-anatomy');
     const resTip = document.getElementById('res-tip');
     if (resAnatomy) resAnatomy.innerText = anatomyText;
     if (resTip) resTip.innerText = tipText;
-        // Динамическое обновление текста на кнопке перехода
+
+    // Обновляем диапазон роста на кнопке подбора
     const btnShow = document.getElementById('btn-show-matched-bikes');
     if (btnShow) {
       let rangeText = "170–180 см";
@@ -534,8 +571,8 @@
 
       btnShow.innerText = `🚴 Подобрали для тебя! (${rangeText})`;
     }
-
   }
+
 
   // === 3. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ===
   function setCategory(cat) {
