@@ -270,6 +270,129 @@
     </div>
 
   </div>
+<!-- Анатомический калькулятор ростовки (Smartfit & LeMond Edition) -->
+<div class="calculator-card" id="size-calculator" style="display: none;">
+  <div class="calc-header">
+    <h3>📐 Анатомический калькулятор ростовки</h3>
+    <p>Базируется на алгоритмах Smartfit, Ergon и классической формуле Грега Лемонда</p>
+  </div>
+
+  <div class="calc-body">
+    <!-- Пошаговая инструкция по замеру -->
+    <div class="calc-hint">
+      <div class="hint-title">💡 Как измерить инсим:</div>
+      <ol class="hint-steps">
+        <li>Встаньте босиком вплотную к стене, ноги на ширине плеч.</li>
+        <li>Зажмите между ног книгу (ее верхний край будет имитировать седло) и подтяните ее с небольшим давлением вверх.</li>
+        <li>Измерьте расстояние от пола до верхнего края книги — это ваш инсим.</li>
+      </ol>
+    </div>
+
+    <div class="calc-inputs">
+      <div class="input-group">
+        <label for="calc-height">Рост: <span id="val-height">175</span> см</label>
+        <input type="range" id="calc-height" min="155" max="205" value="175" oninput="updateCalc()">
+      </div>
+
+      <div class="input-group">
+        <label for="calc-inseam">Длина ноги (Инсим): <span id="val-inseam">81</span> см</label>
+        <input type="range" id="calc-inseam" min="68" max="100" value="81" oninput="updateCalc()">
+      </div>
+
+      <div class="input-group">
+        <label>Дисциплина и посадка:</label>
+        <div class="toggle-type">
+          <button type="button" class="type-btn active" id="btn-road" onclick="setType('road_race')">🏁 Race Road (0.665)</button>
+          <button type="button" class="type-btn" id="btn-endurance" onclick="setType('endurance')">🚴 Endurance (0.65)</button>
+          <button type="button" class="type-btn" id="btn-gravel" onclick="setType('gravel')">🏕 Gravel (0.63)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Результаты -->
+    <div class="calc-results">
+      <div class="res-item">
+        <span class="res-label">Размер рамы (C-T)</span>
+        <span class="res-val" id="res-size">54 см (M)</span>
+      </div>
+      <div class="res-item">
+        <span class="res-label">Высота седла (метод LeMond)</span>
+        <span class="res-val" id="res-saddle">71.5 см</span>
+      </div>
+      <div class="res-item full">
+        <span class="res-label">Анатомический пропорциональный анализ</span>
+        <span class="res-desc" id="res-anatomy">Пропорциональное телосложение.</span>
+      </div>
+      <div class="res-item full">
+        <span class="res-label">Рекомендация по подбору и посадке</span>
+        <span class="res-desc" id="res-tip">Стандартная геометрия, вынос 100–110 мм.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .calculator-card {
+    background: #1e293b;
+    border-radius: 16px;
+    padding: 20px;
+    margin: 15px 0 25px 0;
+    color: #f8fafc;
+    border: 1px solid #334155;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  }
+  .calc-header h3 { margin: 0 0 6px 0; font-size: 1.2rem; color: #38bdf8; }
+  .calc-header p { margin: 0 0 15px 0; font-size: 0.85rem; color: #94a3b8; }
+  .calc-hint {
+    background: rgba(56, 189, 248, 0.08);
+    border-left: 3px solid #38bdf8;
+    padding: 12px 14px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  .hint-title { font-weight: 700; font-size: 0.85rem; color: #38bdf8; margin-bottom: 6px; }
+  .hint-steps { margin: 0; padding-left: 18px; font-size: 0.8rem; color: #cbd5e1; line-height: 1.45; }
+  .hint-steps li { margin-bottom: 4px; }
+  .input-group { margin-bottom: 16px; }
+  .input-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #f1f5f9; }
+  .input-group input[type="range"] { width: 100%; accent-color: #38bdf8; }
+  .toggle-type { display: flex; gap: 6px; margin-top: 6px; }
+  .type-btn {
+    flex: 1;
+    padding: 8px 6px;
+    border: 1px solid #475569;
+    background: #0f172a;
+    color: #94a3b8;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .type-btn.active {
+    background: #0284c7;
+    color: #fff;
+    border-color: #38bdf8;
+  }
+  .calc-results {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px dashed #334155;
+  }
+  .res-item {
+    background: #0f172a;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #1e293b;
+  }
+  .res-item.full { grid-column: span 2; }
+  .res-label { display: block; font-size: 0.7rem; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .res-val { font-size: 1.05rem; font-weight: 700; color: #38bdf8; }
+  .res-desc { font-size: 0.82rem; color: #cbd5e1; line-height: 1.35; }
+</style>
 
   <!-- Карточки товаров -->
   <div class="catalog" id="catalog">
