@@ -480,9 +480,42 @@
     document.getElementById('res-tip').innerText = tipText;
   }
 
-  // 2. Переключение вкладок категорий
+
+    // 2. Переключение вкладок категорий (ОБНОВЛЕННАЯ ФУНКЦИЯ)
   function setCategory(cat) {
     currentCategory = cat;
+
+    // Подсветка активной кнопки меню
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.remove('active');
+      const onclickAttr = btn.getAttribute('onclick') || '';
+      const dataCat = btn.getAttribute('data-cat') || '';
+
+      if (dataCat === cat || onclickAttr.includes(`'${cat}'`)) {
+        btn.classList.add('active');
+      }
+    });
+
+    // Скрытие панели тегов для отзывов и гайдов
+    const filtersDiv = document.getElementById('filters');
+    if (filtersDiv) {
+      filtersDiv.style.display = (cat === 'reviews' || cat === 'guides') ? 'none' : 'block';
+    }
+
+    // Показ/скрытие калькулятора (показываем только во вкладке «Полезности»)
+    const calcDiv = document.getElementById('size-calculator');
+    if (calcDiv) {
+      if (cat === 'guides') {
+        calcDiv.style.display = 'block'; // Показываем
+        updateCalc();                   // Пересчитываем значения
+      } else {
+        calcDiv.style.display = 'none';  // Прячем на остальных вкладках
+      }
+    }
+
+    renderCatalog();
+  }
+
     
     // Подсветка активной кнопки меню
     document.querySelectorAll('.tab-btn').forEach(btn => {
