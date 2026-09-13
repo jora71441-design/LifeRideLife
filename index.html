@@ -327,6 +327,13 @@
         <span class="res-label">Рекомендация по подбору и посадке</span>
         <span class="res-desc" id="res-tip">Стандартная геометрия, вынос 100–110 мм.</span>
       </div>
+          <!-- Кнопка перехода к подбору -->
+    <div style="margin-top: 16px;">
+      <button type="button" class="btn btn-primary" id="btn-show-matched-bikes" onclick="applyMatchedBikeFilter()" style="width: 100%; padding: 12px; font-weight: 700; font-size: 0.9rem;">
+        🚴 Подобрали для тебя! (170–180 см)
+      </button>
+    </div>
+
     </div>
   </div>
 </div>
@@ -431,6 +438,37 @@
     
     updateCalc();
   }
+  // Переход от калькулятора к каталогу с установкой фильтра по росту
+  function applyMatchedBikeFilter() {
+    const heightEl = document.getElementById('calc-height');
+    if (!heightEl) return;
+
+    const height = parseInt(heightEl.value);
+    let targetTag = '#170_180cm';
+
+    if (height < 160) targetTag = '#150_160cm';
+    else if (height < 170) targetTag = '#160_170cm';
+    else if (height < 180) targetTag = '#170_180cm';
+    else if (height < 190) targetTag = '#180_190cm';
+    else targetTag = '#190_200cm';
+
+    // 1. Сбрасываем текущие теги и выбираем нужный
+    selectedTags.clear();
+    selectedTags.add(targetTag);
+
+    // 2. Обновляем визуальное выделение пиллов-тегов в фильтрах
+    document.querySelectorAll('.tag-pill').forEach(pill => {
+      const onclickAttr = pill.getAttribute('onclick') || '';
+      if (onclickAttr.includes(`'${targetTag}'`)) {
+        pill.classList.add('active');
+      } else {
+        pill.classList.remove('active');
+      }
+    });
+
+    // 3. Переключаем категорию на велосипеды
+    setCategory('bikes');
+  }
 
   function updateCalc() {
     const heightEl = document.getElementById('calc-height');
@@ -484,6 +522,19 @@
     const resTip = document.getElementById('res-tip');
     if (resAnatomy) resAnatomy.innerText = anatomyText;
     if (resTip) resTip.innerText = tipText;
+        // Динамическое обновление текста на кнопке перехода
+    const btnShow = document.getElementById('btn-show-matched-bikes');
+    if (btnShow) {
+      let rangeText = "170–180 см";
+      if (height < 160) rangeText = "150–160 см";
+      else if (height < 170) rangeText = "160–170 см";
+      else if (height < 180) rangeText = "170–180 см";
+      else if (height < 190) rangeText = "180–190 см";
+      else rangeText = "190–200 см";
+
+      btnShow.innerText = `🚴 Подобрали для тебя! (${rangeText})`;
+    }
+
   }
 
   // === 3. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ===
