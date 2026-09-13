@@ -400,26 +400,11 @@
   </div>
 
   <script>
+  // === 1. ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И НАСТРОЙКИ ===
   let postsData = [];
-  let selectedTags = new Set();
   let currentCategory = 'bikes';
-
-  // 1. Инициализация Telegram WebApp SDK и считывание start_param
-  if (window.Telegram && window.Telegram.WebApp) {
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const catParam = urlParams.get('cat');
-    const startParam = tg.initDataUnsafe?.start_param || catParam;
-    
-    if (startParam) {
-      currentCategory = startParam;
-    }
-  }
- // === 1.1. ЛОГИКА И РАСЧЕТЫ КАЛЬКУЛЯТОРА (Вставляем СЮДА) ===
-      let currentBikeType = 'road_race';
+  let selectedTags = new Set();
+  let currentBikeType = 'road_race';
 
   const bikeFactors = {
     'road_race': 0.665,
@@ -427,11 +412,23 @@
     'gravel': 0.63
   };
 
+  const tg = window.Telegram?.WebApp;
+  if (tg) {
+    tg.ready();
+    tg.expand();
+  }
+
+  // === 2. ЛОГИКА КАЛЬКУЛЯТОРА ===
   function setType(type) {
     currentBikeType = type;
-    document.getElementById('btn-road').classList.toggle('active', type === 'road_race');
-    document.getElementById('btn-endurance').classList.toggle('active', type === 'endurance');
-    document.getElementById('btn-gravel').classList.toggle('active', type === 'gravel');
+    const btnRoad = document.getElementById('btn-road');
+    const btnEndurance = document.getElementById('btn-endurance');
+    const btnGravel = document.getElementById('btn-gravel');
+
+    if (btnRoad) btnRoad.classList.toggle('active', type === 'road_race');
+    if (btnEndurance) btnEndurance.classList.toggle('active', type === 'endurance');
+    if (btnGravel) btnGravel.classList.toggle('active', type === 'gravel');
+    
     updateCalc();
   }
 
@@ -443,13 +440,18 @@
     const height = parseInt(heightEl.value);
     const inseam = parseInt(inseamEl.value);
 
-    document.getElementById('val-height').innerText = height;
-    document.getElementById('val-inseam').innerText = inseam;
+    const valHeight = document.getElementById('val-height');
+    const valInseam = document.getElementById('val-inseam');
+    if (valHeight) valHeight.innerText = height;
+    if (valInseam) valInseam.innerText = inseam;
 
+    // Высота седла по методу Грега Лемонда
     const saddleHeight = (inseam * 0.883).toFixed(1);
-    document.getElementById('res-saddle').innerText = `${saddleHeight} см`;
+    const resSaddle = document.getElementById('res-saddle');
+    if (resSaddle) resSaddle.innerText = `${saddleHeight} см`;
 
-    const factor = bikeFactors[currentBikeType];
+    // Расчет высоты рамы C-T
+    const factor = bikeFactors[currentBikeType] || 0.665;
     const rawSize = Math.round(inseam * factor);
     
     let letterSize = 'M';
@@ -459,8 +461,10 @@
     else if (rawSize < 59) letterSize = 'L';
     else letterSize = 'XL';
 
-    document.getElementById('res-size').innerText = `${rawSize} см (${letterSize})`;
+    const resSize = document.getElementById('res-size');
+    if (resSize) resSize.innerText = `${rawSize} см (${letterSize})`;
 
+    // Анатомический анализ пропорций
     const ratio = inseam / height;
     let anatomyText = "";
     let tipText = "";
@@ -472,72 +476,60 @@
       anatomyText = "🏃‍♂️ Удлиненный торс относительно длины ног.";
       tipText = "Рама выбирается с акцентом на Reach (длину). Рассмотрите смежный больший размер или увеличьте длину выноса до 110–120 мм.";
     } else {
-      anatomyText = "⚖️ Пропорциональное телосложение (стандартный антропометрический баланс).";
+      anatomyText = "⚖️ Пропорциональное телосложение.";
       tipText = "Вам подходит стандартная размерная сетка. Рекомендуемая базовая длина выноса: 100–110 мм.";
     }
 
-    document.getElementById('res-anatomy').innerText = anatomyText;
-    document.getElementById('res-tip').innerText = tipText;
+    const resAnatomy = document.getElementById('res-anatomy');
+    const resTip = document.getElementById('res-tip');
+    if (resAnatomy) resAnatomy.innerText = anatomyText;
+    if (resTip) resTip.innerText = tipText;
   }
 
-
-    // 2. Переключение вкладок категорий (ОБНОВЛЕННАЯ ФУНКЦИЯ)
+  // === 3. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ===
   function setCategory(cat) {
     currentCategory = cat;
-
-    // Подсветка активной кнопки меню
+    
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.classList.remove('active');
       const onclickAttr = btn.getAttribute('onclick') || '';
       const dataCat = btn.getAttribute('data-cat') || '';
-
       if (dataCat === cat || onclickAttr.includes(`'${cat}'`)) {
         btn.classList.add('active');
       }
     });
 
-    // Скрытие панели тегов для отзывов и гайдов
     const filtersDiv = document.getElementById('filters');
     if (filtersDiv) {
       filtersDiv.style.display = (cat === 'reviews' || cat === 'guides') ? 'none' : 'block';
     }
 
-    // Показ/скрытие калькулятора (показываем только во вкладке «Полезности»)
     const calcDiv = document.getElementById('size-calculator');
     if (calcDiv) {
       if (cat === 'guides') {
-        calcDiv.style.display = 'block'; // Показываем
-        updateCalc();                   // Пересчитываем значения
+        calcDiv.style.display = 'block';
+        updateCalc();
       } else {
-        calcDiv.style.display = 'none';  // Прячем на остальных вкладках
+        calcDiv.style.display = 'none';
       }
     }
 
     renderCatalog();
   }
 
-    
-    // Подсветка активной кнопки меню
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.classList.remove('active');
-      const onclickAttr = btn.getAttribute('onclick') || '';
-      const dataCat = btn.getAttribute('data-cat') || '';
-      
-      if (dataCat === cat || onclickAttr.includes(`'${cat}'`)) {
-        btn.classList.add('active');
-      }
-    });
-
-    // Скрытие панели тегов для отзывов и гайдов
-    const filtersDiv = document.getElementById('filters');
-    if (filtersDiv) {
-      filtersDiv.style.display = (cat === 'reviews' || cat === 'guides') ? 'none' : 'block';
+  // === 4. ОБРАБОТКА ТЕГОВ (ФИЛЬТРОВ) ===
+  function toggleTag(el, tag) {
+    if (selectedTags.has(tag)) {
+      selectedTags.delete(tag);
+      el.classList.remove('active');
+    } else {
+      selectedTags.add(tag);
+      el.classList.add('active');
     }
-
     renderCatalog();
   }
 
-  // 3. Загрузка товаров из JSON
+  // === 5. ЗАГРУЗКА И ОТОБРАЖЕНИЕ КАТАЛОГА ===
   async function loadProducts() {
     const catalogEl = document.getElementById('catalog');
     try {
@@ -545,41 +537,51 @@
       if (!response.ok) throw new Error('products.json not found');
       
       postsData = await response.json();
-      renderCatalog();
+      
+      // Проверка deep-link параметра из Telegram
+      const startParam = tg?.initDataUnsafe?.start_param;
+      if (startParam) {
+        setCategory(startParam);
+      } else {
+        renderCatalog();
+      }
     } catch (err) {
       console.error(err);
-      catalogEl.innerHTML = '<div class="status-msg">⚠️ Ошибка загрузки базы товаров. Проверьте наличие products.json.</div>';
+      if (catalogEl) {
+        catalogEl.innerHTML = '<div class="status-msg">⚠️ Ошибка загрузки базы товаров. Проверьте наличие products.json.</div>';
+      }
     }
   }
 
-  // 4. Фильтрация и рендеринг карточек
-    function renderCatalog() {
+  function renderCatalog() {
     const catalogEl = document.getElementById('catalog');
-    
+    if (!catalogEl) return;
+
+    if (!postsData || postsData.length === 0) {
+      catalogEl.innerHTML = '<div class="status-msg">⏳ Загрузка базы товаров...</div>';
+      return;
+    }
+
     const filtered = postsData.filter(post => {
       let cat = (post.category || 'bikes').toLowerCase();
       const tags = (post.tags || []).map(t => t.toLowerCase());
       const raw = (post.rawText || '').toLowerCase();
 
-      // --- ЖЕЛЕЗНАЯ ЗАЩИТА ---
-      // 1. Ищем явные теги отзывов и полезного в тексте и тегах
+      // Железный фильтр категорий
       const isReview = tags.some(t => t.includes('отзыв')) || raw.includes('#отзыв');
       const isGuide = tags.some(t => t.includes('полезное') || t.includes('гайд')) || raw.includes('#полезное') || raw.includes('#гайд');
       
-      // 2. Переопределяем категорию, если скрипт-парсер JSON ошибся
       if (isReview) {
         cat = 'reviews';
       } else if (isGuide) {
         cat = 'guides';
       } else if (cat === 'reviews' || cat === 'guides') {
-        // Если тегов нет, но товар попал в отзывы (ошибка базы) — возвращаем его в велосипеды
         cat = 'bikes'; 
       }
 
-      // 3. Строгое соответствие выбранной вкладке (теперь 1 строчка вместо 5)
       if (currentCategory !== cat) return false;
 
-      // 4. Фильтрация по выбранным кнопкам-тегам
+      // Фильтрация по кнопкам-тегам
       for (let tag of selectedTags) {
         const cleanTag = tag.toLowerCase().replace('к', 'k');
         const match = tags.some(t => t.includes(cleanTag)) || raw.includes(cleanTag);
@@ -613,11 +615,11 @@
     `).join('');
   }
 
-  // 5. Запуск при полной готовности DOM
+  // Запуск при загрузке страницы
   document.addEventListener("DOMContentLoaded", () => {
-    setCategory(currentCategory);
     loadProducts();
   });
 </script>
+
 </body>
 </html>
