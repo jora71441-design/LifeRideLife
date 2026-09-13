@@ -79,7 +79,7 @@ async def inline_query_handler(query: types.InlineQuery):
                     reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
     InlineKeyboardButton(
         text=nav["btn_text"], 
-        url=f"https://jora71441-design.github.io/LifeRideLife/?cat={nav['param']}"
+        url=f"https://t.me/liferidelife_bot?startapp={nav['param']}"
     )
 ]])
 
