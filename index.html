@@ -336,22 +336,33 @@
   }
 
   // 4. Фильтрация и рендеринг карточек
-  function renderCatalog() {
+    function renderCatalog() {
     const catalogEl = document.getElementById('catalog');
     
     const filtered = postsData.filter(post => {
-      const cat = (post.category || 'bikes').toLowerCase();
+      let cat = (post.category || 'bikes').toLowerCase();
       const tags = (post.tags || []).map(t => t.toLowerCase());
       const raw = (post.rawText || '').toLowerCase();
 
-      // Строгое соответствие выбранной вкладке
-      if (currentCategory === 'bikes' && cat !== 'bikes') return false;
-      if (currentCategory === 'upgrade_kits' && cat !== 'upgrade_kits') return false;
-      if (currentCategory === 'components' && cat !== 'components') return false;
-      if (currentCategory === 'guides' && cat !== 'guides') return false;
-      if (currentCategory === 'reviews' && cat !== 'reviews') return false;
+      // --- ЖЕЛЕЗНАЯ ЗАЩИТА ---
+      // 1. Ищем явные теги отзывов и полезного в тексте и тегах
+      const isReview = tags.some(t => t.includes('отзыв')) || raw.includes('#отзыв');
+      const isGuide = tags.some(t => t.includes('полезное') || t.includes('гайд')) || raw.includes('#полезное') || raw.includes('#гайд');
+      
+      // 2. Переопределяем категорию, если скрипт-парсер JSON ошибся
+      if (isReview) {
+        cat = 'reviews';
+      } else if (isGuide) {
+        cat = 'guides';
+      } else if (cat === 'reviews' || cat === 'guides') {
+        // Если тегов нет, но товар попал в отзывы (ошибка базы) — возвращаем его в велосипеды
+        cat = 'bikes'; 
+      }
 
-      // Фильтрация по выбранным тегам
+      // 3. Строгое соответствие выбранной вкладке (теперь 1 строчка вместо 5)
+      if (currentCategory !== cat) return false;
+
+      // 4. Фильтрация по выбранным кнопкам-тегам
       for (let tag of selectedTags) {
         const cleanTag = tag.toLowerCase().replace('к', 'k');
         const match = tags.some(t => t.includes(cleanTag)) || raw.includes(cleanTag);
@@ -383,17 +394,6 @@
         </div>
       </div>
     `).join('');
-  }
-
-  function toggleTag(el, tag) {
-    if (selectedTags.has(tag)) {
-      selectedTags.delete(tag);
-      el.classList.remove('active');
-    } else {
-      selectedTags.add(tag);
-      el.classList.add('active');
-    }
-    renderCatalog();
   }
 
   // 5. Запуск при полной готовности DOM
