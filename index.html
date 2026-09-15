@@ -168,31 +168,142 @@
       color: var(--text-muted);
       font-size: 14px;
     }
+
+    /* Анатомический калькулятор */
+    .calculator-card {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 20px;
+      margin: 15px 0 15px 0;
+      color: #f8fafc;
+      border: 1px solid #334155;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+    .calc-header h3 { margin: 0 0 6px 0; font-size: 1.2rem; color: #38bdf8; }
+    .calc-header p { margin: 0 0 15px 0; font-size: 0.85rem; color: #94a3b8; }
+    .calc-hint {
+      background: rgba(56, 189, 248, 0.08);
+      border-left: 3px solid #38bdf8;
+      padding: 12px 14px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .hint-title { font-weight: 700; font-size: 0.85rem; color: #38bdf8; margin-bottom: 6px; }
+    .hint-steps { margin: 0; padding-left: 18px; font-size: 0.8rem; color: #cbd5e1; line-height: 1.45; }
+    .hint-steps li { margin-bottom: 4px; }
+    .input-group { margin-bottom: 16px; }
+    .input-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #f1f5f9; }
+    .input-group input[type="range"] { width: 100%; accent-color: #38bdf8; }
+    .toggle-type { display: flex; gap: 6px; margin-top: 6px; }
+    .type-btn {
+      flex: 1;
+      padding: 8px 6px;
+      border: 1px solid #475569;
+      background: #0f172a;
+      color: #94a3b8;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .type-btn.active {
+      background: #0284c7;
+      color: #fff;
+      border-color: #38bdf8;
+    }
+    .calc-results {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px dashed #334155;
+    }
+    .res-item {
+      background: #0f172a;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #1e293b;
+    }
+    .res-item.full { grid-column: span 2; }
+    .res-label { display: block; font-size: 0.7rem; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .res-val { font-size: 1.05rem; font-weight: 700; color: #38bdf8; }
+    .res-desc { font-size: 0.82rem; color: #cbd5e1; line-height: 1.35; }
+
+    /* Партнерская карточка Fititi */
+    .partner-card {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 18px;
+      margin: 15px 0 25px 0;
+      border: 1px solid #334155;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+    .partner-badge {
+      display: inline-block;
+      background: rgba(43, 82, 120, 0.6);
+      color: #38bdf8;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 8px;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+    .partner-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 0 0 8px 0;
+    }
+    .partner-desc {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      line-height: 1.45;
+      margin: 0 0 16px 0;
+    }
+    .btn-fititi {
+      width: 100%;
+      background: #0284c7;
+      color: #ffffff;
+      border: none;
+      padding: 12px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .btn-fititi:active {
+      background: #0369a1;
+    }
   </style>
+
   <!-- Yandex.Metrika counter -->
-<script type="text/javascript" >
-   (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-   m[i].l=1*new Date();
-   for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-   k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
-   (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+  <script type="text/javascript" >
+     (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+     m[i].l=1*new Date();
+     for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+     k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+     (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
 
-   ym(112661781, "init", {
-        clickmap:true,
-        trackLinks:true,
-        accurateTrackBounce:true,
-        webvisor:true
-   });
-</script>
-<noscript><div><img src="https://mc.yandex.ru/watch/112661781" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter -->
-
+     ym(112661781, "init", {
+          clickmap:true,
+          trackLinks:true,
+          accurateTrackBounce:true,
+          webvisor:true
+     });
+  </script>
+  <noscript><div><img src="https://mc.yandex.ru/watch/112661781" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+  <!-- /Yandex.Metrika counter -->
 </head>
 <body>
 
   <div class="banner">🔥 Предзаказ сезона 2027</div>
 
-  <!-- Главные категории (добавил Полезности для полного совпадения с ботом) -->
+  <!-- Главные категории -->
   <div class="tabs">
     <button class="tab-btn active" onclick="setCategory('bikes')">🚲 Велосипеды</button>
     <button class="tab-btn" onclick="setCategory('upgrade_kits')">⚡ Upgrade Kits</button>
@@ -288,137 +399,86 @@
     </div>
 
   </div>
-<!-- Анатомический калькулятор ростовки (Smartfit & LeMond Edition) -->
-<div class="calculator-card" id="size-calculator" style="display: none;">
-  <div class="calc-header">
-    <h3>📐 Анатомический калькулятор ростовки</h3>
-    <p>Базируется на алгоритмах Smartfit, Ergon и классической формуле Грега Лемонда</p>
-  </div>
 
-  <div class="calc-body">
-    <!-- Пошаговая инструкция по замеру -->
-    <div class="calc-hint">
-      <div class="hint-title">💡 Как измерить инсим:</div>
-      <ol class="hint-steps">
-        <li>Встаньте босиком вплотную к стене, ноги на ширине плеч.</li>
-        <li>Зажмите между ног книгу (ее верхний край будет имитировать седло) и подтяните ее с небольшим давлением вверх.</li>
-        <li>Измерьте расстояние от пола до верхнего края книги — это ваш инсим.</li>
-      </ol>
+  <!-- Анатомический калькулятор ростовки (Smartfit & LeMond Edition) -->
+  <div class="calculator-card" id="size-calculator" style="display: none;">
+    <div class="calc-header">
+      <h3>📐 Анатомический калькулятор ростовки</h3>
+      <p>Базируется на алгоритмах Smartfit, Ergon и классической формуле Грега Лемонда</p>
     </div>
 
-    <div class="calc-inputs">
-      <div class="input-group">
-        <label for="calc-height">Рост: <span id="val-height">175</span> см</label>
-        <input type="range" id="calc-height" min="155" max="205" value="175" oninput="updateCalc()">
+    <div class="calc-body">
+      <!-- Пошаговая инструкция по замеру -->
+      <div class="calc-hint">
+        <div class="hint-title">💡 Как измерить инсим:</div>
+        <ol class="hint-steps">
+          <li>Встаньте босиком вплотную к стене, ноги на ширине плеч.</li>
+          <li>Зажмите между ног книгу (ее верхний край будет имитировать седло) и подтяните ее с небольшим давлением вверх.</li>
+          <li>Измерьте расстояние от пола до верхнего края книги — это ваш инсим.</li>
+        </ol>
       </div>
 
-      <div class="input-group">
-        <label for="calc-inseam">Длина ноги (Инсим): <span id="val-inseam">81</span> см</label>
-        <input type="range" id="calc-inseam" min="68" max="100" value="81" oninput="updateCalc()">
-      </div>
+      <div class="calc-inputs">
+        <div class="input-group">
+          <label for="calc-height">Рост: <span id="val-height">175</span> см</label>
+          <input type="range" id="calc-height" min="155" max="205" value="175" oninput="updateCalc()">
+        </div>
 
-      <div class="input-group">
-        <label>Дисциплина и посадка:</label>
-        <div class="toggle-type">
-          <button type="button" class="type-btn active" id="btn-road" onclick="setType('road_race')">🏁 Race Road (0.665)</button>
-          <button type="button" class="type-btn" id="btn-endurance" onclick="setType('endurance')">🚴 Endurance (0.65)</button>
-          <button type="button" class="type-btn" id="btn-gravel" onclick="setType('gravel')">🏕 Gravel (0.63)</button>
+        <div class="input-group">
+          <label for="calc-inseam">Длина ноги (Инсим): <span id="val-inseam">81</span> см</label>
+          <input type="range" id="calc-inseam" min="68" max="100" value="81" oninput="updateCalc()">
+        </div>
+
+        <div class="input-group">
+          <label>Дисциплина и посадка:</label>
+          <div class="toggle-type">
+            <button type="button" class="type-btn active" id="btn-road" onclick="setType('road_race')">🏁 Race Road (0.665)</button>
+            <button type="button" class="type-btn" id="btn-endurance" onclick="setType('endurance')">🚴 Endurance (0.65)</button>
+            <button type="button" class="type-btn" id="btn-gravel" onclick="setType('gravel')">🏕 Gravel (0.63)</button>
+          </div>
         </div>
       </div>
-    </div>
 
-        <!-- Результаты -->
-    <div class="calc-results">
-      <div class="res-item">
-        <span class="res-label">Рекомендуемое ETT</span>
-        <span class="res-val" id="res-size">535–550 мм (S/M)</span>
+      <!-- Результаты -->
+      <div class="calc-results">
+        <div class="res-item">
+          <span class="res-label">Рекомендуемое ETT</span>
+          <span class="res-val" id="res-size">535–550 мм (S/M)</span>
+        </div>
+        <div class="res-item">
+          <span class="res-label">Высота седла (метод LeMond)</span>
+          <span class="res-val" id="res-saddle">71.5 см</span>
+        </div>
+        <div class="res-item full">
+          <span class="res-label">Анатомический пропорциональный анализ</span>
+          <span class="res-desc" id="res-anatomy">Пропорциональное телосложение.</span>
+        </div>
+        <div class="res-item full">
+          <span class="res-label">Рекомендация по подбору и посадке</span>
+          <span class="res-desc" id="res-tip">Стандартная геометрия, вынос 100–110 мм.</span>
+        </div>
       </div>
-      <div class="res-item">
-        <span class="res-label">Высота седла (метод LeMond)</span>
-        <span class="res-val" id="res-saddle">71.5 см</span>
-      </div>
-      <div class="res-item full">
-        <span class="res-label">Анатомический пропорциональный анализ</span>
-        <span class="res-desc" id="res-anatomy">Пропорциональное телосложение.</span>
-      </div>
-      <div class="res-item full">
-        <span class="res-label">Рекомендация по подбору и посадке</span>
-        <span class="res-desc" id="res-tip">Стандартная геометрия, вынос 100–110 мм.</span>
-      </div>
-    </div>
-    <!-- Кнопка перехода к подбору -->
-    <div style="margin-top: 16px;">
-      <button type="button" class="btn btn-primary" id="btn-show-matched-bikes" onclick="applyMatchedBikeFilter()" style="width: 100%; padding: 12px; font-weight: 700; font-size: 0.9rem;">
-        🚴 Подобрали для тебя! (170–180 см)
-      </button>
-    </div>
 
+      <!-- Кнопка перехода к подбору -->
+      <div style="margin-top: 16px;">
+        <button type="button" class="btn btn-primary" id="btn-show-matched-bikes" onclick="applyMatchedBikeFilter()" style="width: 100%; padding: 12px; font-weight: 700; font-size: 0.9rem;">
+          🚴 Подобрали для тебя! (170–180 см)
+        </button>
+      </div>
     </div>
   </div>
-</div>
 
-<style>
-  .calculator-card {
-    background: #1e293b;
-    border-radius: 16px;
-    padding: 20px;
-    margin: 15px 0 25px 0;
-    color: #f8fafc;
-    border: 1px solid #334155;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-  }
-  .calc-header h3 { margin: 0 0 6px 0; font-size: 1.2rem; color: #38bdf8; }
-  .calc-header p { margin: 0 0 15px 0; font-size: 0.85rem; color: #94a3b8; }
-  .calc-hint {
-    background: rgba(56, 189, 248, 0.08);
-    border-left: 3px solid #38bdf8;
-    padding: 12px 14px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-  }
-  .hint-title { font-weight: 700; font-size: 0.85rem; color: #38bdf8; margin-bottom: 6px; }
-  .hint-steps { margin: 0; padding-left: 18px; font-size: 0.8rem; color: #cbd5e1; line-height: 1.45; }
-  .hint-steps li { margin-bottom: 4px; }
-  .input-group { margin-bottom: 16px; }
-  .input-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #f1f5f9; }
-  .input-group input[type="range"] { width: 100%; accent-color: #38bdf8; }
-  .toggle-type { display: flex; gap: 6px; margin-top: 6px; }
-  .type-btn {
-    flex: 1;
-    padding: 8px 6px;
-    border: 1px solid #475569;
-    background: #0f172a;
-    color: #94a3b8;
-    border-radius: 8px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  .type-btn.active {
-    background: #0284c7;
-    color: #fff;
-    border-color: #38bdf8;
-  }
-  .calc-results {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 18px;
-    padding-top: 16px;
-    border-top: 1px dashed #334155;
-  }
-  .res-item {
-    background: #0f172a;
-    padding: 12px;
-    border-radius: 10px;
-    border: 1px solid #1e293b;
-  }
-  .res-item.full { grid-column: span 2; }
-  .res-label { display: block; font-size: 0.7rem; color: #64748b; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .res-val { font-size: 1.05rem; font-weight: 700; color: #38bdf8; }
-  .res-desc { font-size: 0.82rem; color: #cbd5e1; line-height: 1.35; }
-</style>
+  <!-- Карточка Fititi Partner (Отображается во вкладке Полезности) -->
+  <div class="partner-card" id="fititi-card" style="display: none;">
+    <div class="partner-badge">ПАРТНЕР</div>
+    <h3 class="partner-title">🚴‍♂️ Fititi — Онлайн Байкфит</h3>
+    <p class="partner-desc">
+      Настройка удаленной посадки на велосипеде. Загрузи видео со станка и получи разбор биомеханики и углов.
+    </p>
+    <button class="btn-fititi" onclick="openExternalLink('https://fititi.ru')">
+      Настроить посадку 🚀
+    </button>
+  </div>
 
   <!-- Карточки товаров -->
   <div class="catalog" id="catalog">
@@ -444,6 +504,18 @@
     tg.expand();
   }
 
+  // Внешние ссылки с трекингом Яндекс Метрики
+  function openExternalLink(url) {
+    if (window.ym) {
+      ym(112661781, 'reachGoal', 'click_fititi');
+    }
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink) {
+      window.Telegram.WebApp.openLink(url);
+    } else {
+      window.open(url, '_blank');
+    }
+  }
+
   // === 2. ЛОГИКА КАЛЬКУЛЯТОРА ===
   function setType(type) {
     currentBikeType = type;
@@ -457,6 +529,7 @@
     
     updateCalc();
   }
+
   // Переход от калькулятора к каталогу с установкой фильтра по росту
   function applyMatchedBikeFilter() {
     const heightEl = document.getElementById('calc-height');
@@ -490,7 +563,7 @@
     setCategory('bikes');
   }
 
-    // 1. Таблица рекомендуемого ETT под рост и тип байка
+  // Таблица рекомендуемого ETT под рост и тип байка
   const sizeTable = [
     {
       minH: 155, maxH: 162,
@@ -530,12 +603,13 @@
     }
   ];
 
-  // 2. Основная функция перерасчета значений
+  // Основная функция перерасчета значений
   function updateCalc() {
     const heightEl = document.getElementById('calc-height');
     const inseamEl = document.getElementById('calc-inseam');
     if (!heightEl || !inseamEl) return;
-if (window.ym) ym(112661781, 'reachGoal', 'calc_ett');
+    if (window.ym) ym(112661781, 'reachGoal', 'calc_ett');
+    
     const height = parseInt(heightEl.value);
     const inseam = parseInt(inseamEl.value);
 
@@ -598,7 +672,6 @@ if (window.ym) ym(112661781, 'reachGoal', 'calc_ett');
     }
   }
 
-
   // === 3. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ===
   function setCategory(cat) {
     currentCategory = cat;
@@ -618,13 +691,17 @@ if (window.ym) ym(112661781, 'reachGoal', 'calc_ett');
     }
 
     const calcDiv = document.getElementById('size-calculator');
-    if (calcDiv) {
-      if (cat === 'guides') {
+    const fititiDiv = document.getElementById('fititi-card');
+
+    if (cat === 'guides') {
+      if (calcDiv) {
         calcDiv.style.display = 'block';
         updateCalc();
-      } else {
-        calcDiv.style.display = 'none';
       }
+      if (fititiDiv) fititiDiv.style.display = 'block';
+    } else {
+      if (calcDiv) calcDiv.style.display = 'none';
+      if (fititiDiv) fititiDiv.style.display = 'none';
     }
 
     renderCatalog();
