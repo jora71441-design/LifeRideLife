@@ -806,6 +806,34 @@
       </div>
     `).join('');
   }
+function openWinspaceCatalog() {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+  const container = document.getElementById('products-container') || document.querySelector('.products-grid') || document.getElementById('catalog');
+
+  if (!container || !window.WINSPACE_CATALOG) {
+    console.error('Контейнер или база Winspace не найдены');
+    return;
+  }
+
+  container.innerHTML = window.WINSPACE_CATALOG.map(item => `
+    <div class="product-card" style="border: 1px solid #ff3b30; position: relative; padding: 12px; background: #1c1c1e; border-radius: 12px; margin-bottom: 12px;">
+      <span class="badge" style="position: absolute; top: 12px; right: 12px; background: #ff3b30; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">
+        ${item.badge}
+      </span>
+      <img src="${item.image}" alt="${item.title}" style="width: 100%; border-radius: 8px; object-fit: cover;">
+      <h3 style="font-size: 16px; margin: 10px 0 4px; color: #fff;">${item.title}</h3>
+      <p style="font-weight: bold; font-size: 18px; color: #34c759; margin-bottom: 10px;">
+        ${item.priceRrp.toLocaleString('ru-RU')} ₽
+      </p>
+      <button 
+        onclick="openWinspaceConfigurator('${item.id}')"
+        style="width: 100%; background: linear-gradient(90deg, #ff3b30, #ff2d55); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+        ⚙️ Сконфигурировать
+      </button>
+    </div>
+  `).join('');
+}
 
   // Запуск при загрузке страницы
   document.addEventListener("DOMContentLoaded", () => {
