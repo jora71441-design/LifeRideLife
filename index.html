@@ -741,21 +741,27 @@
 
   // === 3. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ===
   function setCategory(cat) {
-    currentCategory = cat;
-    
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.classList.remove('active');
-      const onclickAttr = btn.getAttribute('onclick') || '';
-      const dataCat = btn.getAttribute('data-cat') || '';
-      if (dataCat === cat || onclickAttr.includes(`'${cat}'`)) {
-        btn.classList.add('active');
-      }
-    });
+  function setCategory(cat) {
+  currentCategory = cat;
 
-    const filtersDiv = document.getElementById('filters');
-    if (filtersDiv) {
-      filtersDiv.style.display = (cat === 'reviews' || cat === 'guides') ? 'none' : 'block';
+  // Сбрасываем активные фильтры при смене категории
+  selectedTags.clear();
+  document.querySelectorAll('.tag-pill').forEach(pill => pill.classList.remove('active'));
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.remove('active');
+    const onclickAttr = btn.getAttribute('onclick') || '';
+    const dataCat = btn.getAttribute('data-cat') || '';
+    if (dataCat === cat || onclickAttr.includes(`'${cat}'`)) {
+      btn.classList.add('active');
     }
+  });
+
+  // Показываем блок фильтров СТРОГО для велосипедов
+  const filtersDiv = document.getElementById('filters');
+  if (filtersDiv) {
+    filtersDiv.style.display = (cat === 'bikes') ? 'block' : 'none';
+  }
 
     const calcDiv = document.getElementById('size-calculator');
     const fititiDiv = document.getElementById('fititi-card');
