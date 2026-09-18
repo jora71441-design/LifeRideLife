@@ -741,35 +741,36 @@
 
   // === 3. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ===
   function setCategory(cat) {
-  function setCategory(cat) {
-  currentCategory = cat;
+    currentCategory = cat;
 
-  // Сбрасываем активные фильтры при смене категории
-  selectedTags.clear();
-  document.querySelectorAll('.tag-pill').forEach(pill => pill.classList.remove('active'));
+    // 1. Сбрасываем выбранные фильтры при смене категории
+    selectedTags.clear();
+    document.querySelectorAll('.tag-pill').forEach(pill => pill.classList.remove('active'));
 
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.classList.remove('active');
-    const onclickAttr = btn.getAttribute('onclick') || '';
-    const dataCat = btn.getAttribute('data-cat') || '';
-    if (dataCat === cat || onclickAttr.includes(`'${cat}'`)) {
-      btn.classList.add('active');
+    // 2. Подсвечиваем активную вкладку
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.remove('active');
+      const onclickAttr = btn.getAttribute('onclick') || '';
+      const dataCat = btn.getAttribute('data-cat') || '';
+      if (dataCat === cat || onclickAttr.includes(`'${cat}'`)) {
+        btn.classList.add('active');
+      }
+    });
+
+    // 3. Показываем блок фильтров СТРОГО для велосипедов
+    const filtersDiv = document.getElementById('filters');
+    if (filtersDiv) {
+      filtersDiv.style.display = (cat === 'bikes') ? 'block' : 'none';
     }
-  });
 
-  // Показываем блок фильтров СТРОГО для велосипедов
-  const filtersDiv = document.getElementById('filters');
-  if (filtersDiv) {
-    filtersDiv.style.display = (cat === 'bikes') ? 'block' : 'none';
-  }
-
+    // 4. Показываем калькулятор и Fititi только в Полезностях
     const calcDiv = document.getElementById('size-calculator');
     const fititiDiv = document.getElementById('fititi-card');
 
     if (cat === 'guides') {
       if (calcDiv) {
         calcDiv.style.display = 'block';
-        updateCalc();
+        if (typeof updateCalc === 'function') updateCalc();
       }
       if (fititiDiv) fititiDiv.style.display = 'block';
     } else {
@@ -777,6 +778,7 @@
       if (fititiDiv) fititiDiv.style.display = 'none';
     }
 
+    // 5. Обновляем каталог
     renderCatalog();
   }
 
