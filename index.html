@@ -1037,14 +1037,30 @@ function openWinspaceCatalog(subCat = window.winspaceState.subCat, profile = win
     return;
   }
 
-  // 2. Фильтрация товаров по категории и профилю катания
-  const filteredItems = window.WINSPACE_CATALOG.filter(item => {
-    const itemCat = item.category || (item.isComplete ? 'complete' : 'parts');
-    if (itemCat !== subCat) return false;
+  // Карта соответствия чипсов профилей категориям из winspaceCatalog.js
+  const profileMap = {
+    'aero': ['road_aero', 'aero'],
+    'climbing': ['road_climbing', 'climbing', 'climb'],
+    'gravel': ['gravel', 'gravel_aero'],
+    'endurance': ['endurance'],
+    'tt': ['tt', 'triathlon']
+  };
 
+  // 2. ИСПРАВЛЕННАЯ ФИЛЬТРАЦИЯ: проверяем type === 'complete' и правильный профиль
+  const filteredItems = window.WINSPACE_CATALOG.filter(item => {
+    const isComplete = item.type === 'complete';
+    
+    // Разделение на "Готовый байк" (complete) и "Рамы и Компоненты" (frameset/wheels)
+    if (subCat === 'complete' && !isComplete) return false;
+    if (subCat === 'parts' && isComplete) return false;
+
+    // Фильтр по профилю катания для готовых байков
     if (subCat === 'complete' && profile !== 'all') {
-      return item.profile === profile || item.discipline === profile || item.type === profile;
+      const itemCat = (item.category || '').toLowerCase();
+      const allowedCategories = profileMap[profile] || [profile];
+      return allowedCategories.some(catKey => itemCat.includes(catKey));
     }
+
     return true;
   });
 
@@ -1062,7 +1078,7 @@ function openWinspaceCatalog(subCat = window.winspaceState.subCat, profile = win
     </div>
   `;
 
-  // 4. Шаблон чипсов профилей катания (для готовых байков)
+  // 4. Шаблон чипсов профилей катания
   const profilesHTML = subCat === 'complete' ? `
     <div class="winspace-profiles" style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none;">
       ${[
@@ -1081,19 +1097,28 @@ function openWinspaceCatalog(subCat = window.winspaceState.subCat, profile = win
     </div>
   ` : '';
 
-  // 5. Отрисовка карточек
+  const fallbackImg = 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600';
+
+  // 5. Отрисовка карточек с защитой картинки от сбоев сети
   const cardsHTML = filteredItems.length > 0 ? filteredItems.map(item => {
     const price = item.priceRrp || item.basePrice || 0;
     const deposit = Math.round(price * 0.5);
     const title = item.title || item.name || 'Winspace';
-    const badge = item.badge || item.type || 'Winspace';
+    const badge = item.badge || 'Официальный заказ';
+    const imgSrc = item.image || fallbackImg;
 
     return `
       <div class="product-card" style="border: 1px solid #ff3b30; position: relative; padding: 12px; background: #1c1c1e; border-radius: 12px; margin-bottom: 12px;">
         <span class="badge" style="position: absolute; top: 12px; right: 12px; background: #ff3b30; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">
           ${badge}
         </span>
-        <img src="${item.image}" alt="${title}" style="width: 100%; border-radius: 8px; object-fit: cover;">
+        <img 
+          src="${imgSrc}" 
+          alt="${title}" 
+          loading="lazy"
+          style="width: 100%; border-radius: 8px; object-fit: cover;"
+          onerror="this.onerror=null; this.src='${fallbackImg}';"
+        >
         <h3 style="font-size: 16px; margin: 10px 0 4px; color: #fff;">${title}</h3>
         <div style="margin-bottom: 10px;">
           <span style="font-size: 13px; color: #8e8e93; text-decoration: line-through;">RRP: ${price.toLocaleString('ru-RU')} ₽</span>
@@ -1112,7 +1137,6 @@ function openWinspaceCatalog(subCat = window.winspaceState.subCat, profile = win
 
   container.innerHTML = subCatHTML + profilesHTML + cardsHTML;
 }
-
 
   // Запуск при загрузке страницы
   document.addEventListener("DOMContentLoaded", () => {
