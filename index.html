@@ -741,7 +741,18 @@
 
   // === 3. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ===
   function setCategory(cat) {
+    function setCategory(cat) {
     currentCategory = cat;
+
+    // === ЖЕЛЕЗНЫЙ ПЕРЕХВАТ ДЛЯ WINSPACE ===
+    if (cat === 'winspace') {
+      if (typeof openWinspaceCatalog === 'function') {
+        openWinspaceCatalog('complete', 'all');
+      } else {
+        console.error('Функция openWinspaceCatalog не найдена!');
+      }
+      return; // Прерываем выполнение, чтобы НЕ запускать renderCatalog()
+    }
 
     // 1. Сбрасываем выбранные фильтры при смене категории
     selectedTags.clear();
@@ -778,7 +789,7 @@
       if (fititiDiv) fititiDiv.style.display = 'none';
     }
 
-    // 5. Обновляем каталог
+    // 5. Обновляем обычный каталог (только для б/у байков, гидов и отзывов)
     renderCatalog();
   }
 
