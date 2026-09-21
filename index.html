@@ -986,7 +986,24 @@ function submitWinspaceOrder(itemId) {
   closeWinspaceModal();
 }
 
-function openWinspaceCatalog() {
+// === ГЛОБАЛЬНОЕ СОСТОЯНИЕ WINSPACE ===
+if (typeof window.winspaceState === 'undefined') {
+  window.winspaceState = { subCat: 'complete', profile: 'all' };
+}
+
+function openWinspaceCatalog(subCat = window.winspaceState.subCat, profile = window.winspaceState.profile) {
+  window.winspaceState.subCat = subCat;
+  window.winspaceState.profile = profile;
+
+  // 1. Скрываем стандартные фильтры и калькуляторы
+  const filtersDiv = document.getElementById('filters');
+  const calcDiv = document.getElementById('size-calculator');
+  const fititiDiv = document.getElementById('fititi-card');
+  if (filtersDiv) filtersDiv.style.display = 'none';
+  if (calcDiv) calcDiv.style.display = 'none';
+  if (fititiDiv) fititiDiv.style.display = 'none';
+
+  // Снимаем активную подсветку с главных вкладок
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
 
   const container = document.getElementById('products-container') || document.querySelector('.products-grid') || document.getElementById('catalog');
@@ -996,24 +1013,82 @@ function openWinspaceCatalog() {
     return;
   }
 
-  container.innerHTML = window.WINSPACE_CATALOG.map(item => `
-    <div class="product-card" style="border: 1px solid #ff3b30; position: relative; padding: 12px; background: #1c1c1e; border-radius: 12px; margin-bottom: 12px;">
-      <span class="badge" style="position: absolute; top: 12px; right: 12px; background: #ff3b30; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">
-        ${item.badge}
-      </span>
-      <img src="${item.image}" alt="${item.title}" style="width: 100%; border-radius: 8px; object-fit: cover;">
-      <h3 style="font-size: 16px; margin: 10px 0 4px; color: #fff;">${item.title}</h3>
-      <p style="font-weight: bold; font-size: 18px; color: #34c759; margin-bottom: 10px;">
-        ${item.priceRrp.toLocaleString('ru-RU')} ₽
-      </p>
-      <button 
-        onclick="openWinspaceConfigurator('${item.id}')"
-        style="width: 100%; background: linear-gradient(90deg, #ff3b30, #ff2d55); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">
-        ⚙️ Сконфигурировать
+  // 2. Фильтрация товаров по категории и профилю катания
+  const filteredItems = window.WINSPACE_CATALOG.filter(item => {
+    const itemCat = item.category || (item.isComplete ? 'complete' : 'parts');
+    if (itemCat !== subCat) return false;
+
+    if (subCat === 'complete' && profile !== 'all') {
+      return item.profile === profile || item.discipline === profile || item.type === profile;
+    }
+    return true;
+  });
+
+  // 3. Шаблон переключателя подкатегорий (Байки / Рамы)
+  const subCatHTML = `
+    <div class="winspace-nav" style="display: flex; gap: 8px; margin-bottom: 12px;">
+      <button onclick="openWinspaceCatalog('complete', 'all')" 
+        style="flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; background: ${subCat === 'complete' ? '#ff3b30' : '#2c2c2e'}; color: #fff;">
+        🚲 Готовый байк
+      </button>
+      <button onclick="openWinspaceCatalog('parts', 'all')" 
+        style="flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; background: ${subCat === 'parts' ? '#ff3b30' : '#2c2c2e'}; color: #fff;">
+        🛠️ Рамы и Компоненты
       </button>
     </div>
-  `).join('');
+  `;
+
+  // 4. Шаблон чипсов профилей катания (для готовых байков)
+  const profilesHTML = subCat === 'complete' ? `
+    <div class="winspace-profiles" style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none;">
+      ${[
+        { id: 'all', name: 'Все' },
+        { id: 'aero', name: '🚀 Аэро' },
+        { id: 'climbing', name: '⛰️ Горы' },
+        { id: 'gravel', name: '🏕️ Гравий' },
+        { id: 'endurance', name: '🚴 Эндуранс' },
+        { id: 'tt', name: '⏱️ Триатлон / ТТ' }
+      ].map(p => `
+        <button onclick="openWinspaceCatalog('complete', '${p.id}')"
+          style="padding: 6px 12px; border-radius: 16px; border: none; font-size: 13px; white-space: nowrap; cursor: pointer; background: ${profile === p.id ? '#ff3b30' : '#2c2c2e'}; color: #fff;">
+          ${p.name}
+        </button>
+      `).join('')}
+    </div>
+  ` : '';
+
+  // 5. Отрисовка карточек
+  const cardsHTML = filteredItems.length > 0 ? filteredItems.map(item => {
+    const price = item.priceRrp || item.basePrice || 0;
+    const deposit = Math.round(price * 0.5);
+    const title = item.title || item.name || 'Winspace';
+    const badge = item.badge || item.type || 'Winspace';
+
+    return `
+      <div class="product-card" style="border: 1px solid #ff3b30; position: relative; padding: 12px; background: #1c1c1e; border-radius: 12px; margin-bottom: 12px;">
+        <span class="badge" style="position: absolute; top: 12px; right: 12px; background: #ff3b30; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">
+          ${badge}
+        </span>
+        <img src="${item.image}" alt="${title}" style="width: 100%; border-radius: 8px; object-fit: cover;">
+        <h3 style="font-size: 16px; margin: 10px 0 4px; color: #fff;">${title}</h3>
+        <div style="margin-bottom: 10px;">
+          <span style="font-size: 13px; color: #8e8e93; text-decoration: line-through;">RRP: ${price.toLocaleString('ru-RU')} ₽</span>
+          <p style="font-weight: bold; font-size: 16px; color: #34c759; margin: 2px 0 0 0;">
+            Предоплата 50%: ${deposit.toLocaleString('ru-RU')} ₽
+          </p>
+        </div>
+        <button 
+          onclick="openWinspaceConfigurator('${item.id}')"
+          style="width: 100%; background: linear-gradient(90deg, #ff3b30, #ff2d55); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+          ⚙️ Сконфигурировать
+        </button>
+      </div>
+    `;
+  }).join('') : `<p style="color: #8e8e93; text-align: center; padding: 20px;">В выбранном профиле пока нет доступных моделей</p>`;
+
+  container.innerHTML = subCatHTML + profilesHTML + cardsHTML;
 }
+
 
   // Запуск при загрузке страницы
   document.addEventListener("DOMContentLoaded", () => {
