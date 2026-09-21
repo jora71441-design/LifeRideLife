@@ -818,7 +818,7 @@
     }
   }
 
-  function renderCatalog() {
+    function renderCatalog() {
     const catalogEl = document.getElementById('catalog');
     if (!catalogEl) return;
 
@@ -861,24 +861,38 @@
       return;
     }
 
-    catalogEl.innerHTML = filtered.map(post => `
-      <div class="card">
-        <img src="${post.imgUrl || 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600'}" class="card-img" alt="Product">
-        <div class="card-body">
-          <div class="card-title">${post.title || 'Товар LifeRideLife'}</div>
-          <div class="card-tags">${post.originalTagsText || ''}</div>
-          <div class="card-footer">
-            <div class="card-price">${post.price || 'По запросу'}</div>
-            <div class="badge">🟢 в наличии / под заказ</div>
-          </div>
-          <div class="card-actions">
-            <a href="${post.postUrl || 'https://t.me/LifeRideLife'}" target="_blank" class="btn btn-secondary">📖 Читать пост</a>
-            <a href="https://t.me/Piti4?text=${encodeURIComponent('Здравствуйте! Интересует: ' + (post.title || 'Товар') + '\n' + (post.postUrl || ''))}" target="_blank" class="btn btn-primary">💬 Обсудить модель</a>
+    const fallbackImg = 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600';
+
+    catalogEl.innerHTML = filtered.map(post => {
+      const titleText = post.title || 'Товар LifeRideLife';
+      const imgUrl = post.imgUrl || fallbackImg;
+
+      return `
+        <div class="card">
+          <img 
+            src="${imgUrl}" 
+            class="card-img" 
+            alt="${titleText}" 
+            loading="lazy"
+            onerror="this.onerror=null; this.src='${fallbackImg}';"
+          >
+          <div class="card-body">
+            <div class="card-title">${titleText}</div>
+            <div class="card-tags">${post.originalTagsText || ''}</div>
+            <div class="card-footer">
+              <div class="card-price">${post.price || 'По запросу'}</div>
+              <div class="badge">🟢 в наличии / под заказ</div>
+            </div>
+            <div class="card-actions">
+              <a href="${post.postUrl || 'https://t.me/LifeRideLife'}" target="_blank" class="btn btn-secondary">📖 Читать пост</a>
+              <a href="https://t.me/Piti4?text=${encodeURIComponent('Здравствуйте! Интересует: ' + titleText + '\n' + (post.postUrl || ''))}" target="_blank" class="btn btn-primary">💬 Обсудить модель</a>
+            </div>
           </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
+
     function openWinspaceConfigurator(itemId) {
   const item = window.WINSPACE_CATALOG?.find(i => i.id === itemId);
   if (!item) return;
