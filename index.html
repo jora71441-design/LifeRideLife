@@ -1103,7 +1103,8 @@ function openWinspaceCatalog(subCat = window.winspaceState.subCat, profile = win
   const cardsHTML = filteredItems.length > 0 ? filteredItems.map(item => {
     const price = item.priceRrp || item.basePrice || 0;
     const deposit = Math.round(price * 0.5);
-    const title = item.title || item.name || 'Winspace';
+    const rawTitle = item.title || item.name || 'Winspace';
+const title = rawTitle.replace(/\s*Complete$/i, '');
     const badge = item.badge || 'Официальный заказ';
     const imgSrc = item.image || fallbackImg;
 
