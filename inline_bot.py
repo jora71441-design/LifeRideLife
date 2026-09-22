@@ -102,6 +102,12 @@ def main():
     dp.startup.register(on_startup)
     app = web.Application()
     
+    # 1. Добавляем простой healthcheck для UptimeRobot
+    async def healthcheck(request):
+        return web.Response(text="Bot is alive!", status=200)
+    
+    app.router.add_get("/", healthcheck)
+
     webhook_requests_handler = SimpleRequestHandler(
         dispatcher=dp,
         bot=bot,
