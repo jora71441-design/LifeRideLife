@@ -87,9 +87,10 @@ async def inline_query_handler(query: types.InlineQuery):
                 )
             )
 
-        if query.chat_type in ["group", "supergroup"]:
+                if query.chat_type in ["group", "supergroup"]:
+            # В группах НЕ отдаем список карточек, а показываем ТОЛЬКО одну кнопку перехода в ЛС
             await query.answer(
-                results, 
+                results=[], 
                 cache_time=0, 
                 is_personal=False,
                 button=InlineQueryResultsButton(
@@ -98,8 +99,9 @@ async def inline_query_handler(query: types.InlineQuery):
                 )
             )
         else:
+            # В личке с ботом показываем весь список карточек
             await query.answer(results, cache_time=0, is_personal=False)
-        
+
     except Exception as e:
         print(f"[ERROR] Inline query crash: {e}")
         await query.answer([], cache_time=1, is_personal=False)
