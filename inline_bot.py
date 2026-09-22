@@ -6,8 +6,10 @@ from aiogram.types import (
     InputTextMessageContent, 
     InlineKeyboardMarkup, 
     InlineKeyboardButton,
+    InlineQueryResultsButton,  # <-- Добавили эту строчку
     WebAppInfo
 )
+
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 
 TOKEN = os.getenv("BOT_TOKEN")
@@ -77,22 +79,30 @@ async def inline_query_handler(query: types.InlineQuery):
                         parse_mode="HTML"
                     ),
                     reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
-    InlineKeyboardButton(
-        text=nav["btn_text"], 
-        url=f"https://t.me/liferidelife_bot?startapp={nav['param']}"
-    )
-]])
-
-
+                        InlineKeyboardButton(
+                            text=nav["btn_text"], 
+                            url=f"https://t.me/liferidelife_bot?startapp={nav['param']}"
+                        )
+                    ]])
                 )
             )
 
-        await query.answer(results, cache_time=0, is_personal=False)
+        if query.chat_type in ["group", "supergroup"]:
+            await query.answer(
+                results, 
+                cache_time=0, 
+                is_personal=False,
+                button=InlineQueryResultsButton(
+                    text="💬 Открыть каталог в ЛС с ботом",
+                    start_parameter="from_group"
+                )
+            )
+        else:
+            await query.answer(results, cache_time=0, is_personal=False)
         
     except Exception as e:
         print(f"[ERROR] Inline query crash: {e}")
         await query.answer([], cache_time=1, is_personal=False)
-
 
 async def on_startup(bot: Bot):
     await bot.set_webhook(WEBHOOK_URL, drop_pending_updates=True)
