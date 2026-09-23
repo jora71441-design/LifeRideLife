@@ -662,34 +662,46 @@
     updateCalc();
   }
 
-  // Переход от калькулятора к каталогу с установкой фильтра по росту
+    // Переход от калькулятора к каталогу с установкой фильтра по росту
   function applyMatchedBikeFilter() {
-    const heightEl = document.getElementById('calc-height');
-    if (!heightEl) return;
-    if (window.ym) ym(112661781, 'reachGoal', 'click_matched');
-
-    const height = parseInt(heightEl.value);
-    let targetTag = '#170_180cm';
-
-    if (height < 160) targetTag = '#150_160cm';
-    else if (height < 170) targetTag = '#160_170cm';
-    else if (height < 180) targetTag = '#170_180cm';
-    else if (height < 190) targetTag = '#180_190cm';
-    else targetTag = '#190_200cm';
-
-    // 1. Сбрасываем текущие теги и выбираем нужный
-    selectedTags.clear();
-    selectedTags.add(targetTag);
-
-    // 2. Обновляем визуальное выделение пиллов-тегов в фильтрах
-    document.querySelectorAll('.tag-pill').forEach(pill => {
-      const onclickAttr = pill.getAttribute('onclick') || '';
-      if (onclickAttr.includes(`'${targetTag}'`)) {
-        pill.classList.add('active');
-      } else {
-        pill.classList.remove('active');
+      const heightEl = document.getElementById('calc-height');
+      if (!heightEl) return;
+      if (window.ym) ym(112661781, 'reachGoal', 'click_matched');
+  
+      const height = parseInt(heightEl.value);
+      let targetTag = '#170_180cm';
+  
+      if (height < 160) targetTag = '#150_160cm';
+      else if (height < 170) targetTag = '#160_170cm';
+      else if (height < 180) targetTag = '#170_180cm';
+      else if (height < 190) targetTag = '#180_190cm';
+      else targetTag = '#190_200cm';
+  
+      // 1. СНАЧАЛА переключаем категорию на велосипеды (это сбросит старые теги)
+      setCategory('bikes');
+  
+      // 2. ПОТОМ добавляем нужный тег ростовки
+      selectedTags.add(targetTag);
+  
+      // 3. Обновляем визуальное выделение пиллов-тегов в фильтрах
+      document.querySelectorAll('.tag-pill').forEach(pill => {
+        const onclickAttr = pill.getAttribute('onclick') || '';
+        if (onclickAttr.includes(`'${targetTag}'`)) {
+          pill.classList.add('active');
+        } else {
+          pill.classList.remove('active');
+        }
+      });
+  
+      // 4. Обязательно перерисовываем каталог, чтобы применился новый тег
+      renderCatalog();
+  
+      // 5. Прокручиваем вверх к каталогу
+      const catalogEl = document.getElementById('catalog');
+      if (catalogEl) {
+          catalogEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-    });
+  }
 
     // 3. Переключаем категорию на велосипеды
     setCategory('bikes');
