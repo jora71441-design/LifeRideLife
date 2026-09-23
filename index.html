@@ -554,6 +554,22 @@
 
   <script>
   // === 1. ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И НАСТРОЙКИ ===
+  // Функция нативного шеринга велосипеда в Telegram
+  function shareBike(bikeId, bikeTitle, bikePrice) {
+    const botUsername = "liferidelife_bot";
+    const appShortName = "app";
+    
+    const cleanId = String(bikeId).replace(/\s+/g, '_');
+    const directLink = `https://t.me/${botUsername}/${appShortName}?startapp=bike_${encodeURIComponent(cleanId)}`;
+    const shareText = `Зацени велосипед в LifeRideLife: ${bikeTitle} (${bikePrice}) 🚲🔥`;
+    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(directLink)}&text=${encodeURIComponent(shareText)}`;
+    
+    if (window.Telegram?.WebApp?.openTelegramLink) {
+      window.Telegram.WebApp.openTelegramLink(shareUrl);
+    } else {
+      window.open(shareUrl, '_blank');
+    }
+  }
   let postsData = [];
   let currentCategory = 'bikes';
   let selectedTags = new Set();
@@ -893,9 +909,10 @@
               <div class="card-price">${post.price || 'По запросу'}</div>
               <div class="badge">🟢 в наличии / под заказ</div>
             </div>
-            <div class="card-actions">
-              <a href="${post.postUrl || 'https://t.me/LifeRideLife'}" target="_blank" class="btn btn-secondary">📖 Читать пост</a>
-              <a href="https://t.me/Piti4?text=${encodeURIComponent('Здравствуйте! Интересует: ' + titleText + '\n' + (post.postUrl || ''))}" target="_blank" class="btn btn-primary">💬 Обсудить модель</a>
+                        <div class="card-actions" style="display: flex; gap: 6px; align-items: center; margin-top: 8px;">
+              <a href="${post.postUrl || 'https://t.me/LifeRideLife'}" target="_blank" class="btn btn-secondary" style="flex: 1; text-align: center; padding: 8px 4px; font-size: 12px;">📖 Пост</a>
+              <a href="https://t.me/Piti4?text=${encodeURIComponent('Здравствуйте! Интересует: ' + titleText + '\n' + (post.postUrl || ''))}" target="_blank" class="btn btn-primary" style="flex: 1; text-align: center; padding: 8px 4px; font-size: 12px;">💬 Обсудить</a>
+              <button onclick="shareBike('${post.id || post.title}', '${titleText.replace(/'/g, "\\'")}', '${post.price || 'По запросу'}')" class="btn" style="padding: 8px 10px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #fff; cursor: pointer; font-size: 14px;">🔗</button>
             </div>
           </div>
         </div>
