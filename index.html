@@ -569,7 +569,36 @@
     } else {
       window.open(shareUrl, '_blank');
     }
+  } 
+      // Функция автоматического открытия велосипеда по ссылке
+  function checkDeepLink() {
+    const tg = window.Telegram?.WebApp;
+    if (!tg) return;
+
+    // Telegram передает параметр диплинка в start_param
+    const startParam = tg.initDataUnsafe?.start_param;
+    if (!startParam) return;
+
+    if (startParam.startsWith('bike_')) {
+      const rawBikeId = startParam.replace('bike_', '').toLowerCase();
+      
+      // Ждем отрисовки каталога и ищем нужный велосипед
+      setTimeout(() => {
+        const cards = document.querySelectorAll('.card');
+        cards.forEach(card => {
+          const title = card.querySelector('.card-title')?.innerText.toLowerCase() || '';
+          const cleanTitle = title.replace(/\s+/g, '_');
+          
+          if (cleanTitle.includes(rawBikeId) || rawBikeId.includes(cleanTitle)) {
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            card.style.border = '2px solid #0088cc';
+            card.style.boxShadow = '0 0 15px rgba(0, 136, 204, 0.6)';
+          }
+        });
+      }, 500);
+    }
   }
+
   let postsData = [];
   let currentCategory = 'bikes';
   let selectedTags = new Set();
@@ -918,8 +947,9 @@
         </div>
       `;
     }).join('');
+      // Проверяем, есть ли велосипед в ссылке, и прокручиваем к нему
+    checkDeepLink();
   }
-
     
 function openWinspaceConfigurator(itemId) {
   const item = window.WINSPACE_CATALOG.find(i => i.id === itemId);
