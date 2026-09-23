@@ -22,89 +22,41 @@ dp = Dispatcher()
 
 @dp.inline_query()
 async def inline_query_handler(query: types.InlineQuery):
-    results = []
-    
     try:
-        nav_items = [
-            {
-                "id": "nav_bikes",
-                "title": "🔍 Найти свой вел",
-                "desc": "Подбор велосипедов по росту, бренду и бюджету",
-                "text": "🚲 Нажмите ниже, чтобы запустить подбор велосипеда:",
-                "btn_text": "🚲 Открыть подбор велосипедов",
-                "param": "bikes"
-            },
-            {
-                "id": "nav_kits",
-                "title": "⚡ Upgrade Kits",
-                "desc": "Готовые комплекты для апгрейда и фреймсеты",
-                "text": "⚡ Выберите готовый Upgrade Kit для вашего байка:",
-                "btn_text": "⚡ Перейти к Upgrade Kits",
-                "param": "upgrade_kits"
-            },
-            {
-                "id": "nav_components",
-                "title": "⚙️ Комплектуха",
-                "desc": "Групсеты, колеса, рули и компоненты",
-                "text": "⚙️ Перейдите в каталог запчастей и комплектующих:",
-                "btn_text": "⚙️ Открыть комплектующие",
-                "param": "components"
-            },
-            {
-                "id": "nav_useful",
-                "title": "💡 Полезности",
-                "desc": "Гайды по выбору ростовки, обслуживание и таблицы",
-                "text": "💡 Полезная база знаний:",
-                "btn_text": "💡 Читать полезности",
-                "param": "guides"
-            },
-            {
-                "id": "nav_reviews",
-                "title": "⭐️ Отзывы",
-                "desc": "Отзывы покупателей и выполненные заказы",
-                "text": "⭐️ Отзывы наших клиентов и истории доставок:",
-                "btn_text": "⭐️ Читать отзывы",
-                "param": "reviews"
-            }
-        ]
+        user_query = query.query.strip().lower()
 
-        for nav in nav_items:
-            results.append(
-                InlineQueryResultArticle(
-                    id=nav["id"],
-                    title=nav["title"],
-                    description=nav["desc"],
-                    input_message_content=InputTextMessageContent(
-                        message_text=f"<b>{nav['title']}</b>\n\n{nav['text']}",
-                        parse_mode="HTML"
-                    ),
-                    reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
-                        InlineKeyboardButton(
-                            text=nav["btn_text"], 
-                            url=f"https://t.me/liferidelife_bot?startapp={nav['param']}"
-                        )
-                    ]])
-                )
-            )
-
-                if query.chat_type in ["group", "supergroup"]:
-            # В группах НЕ отдаем список карточек, а показываем ТОЛЬКО одну кнопку перехода в ЛС
-            await query.answer(
-                results=[], 
-                cache_time=0, 
-                is_personal=False,
-                button=InlineQueryResultsButton(
-                    text="💬 Открыть каталог в ЛС с ботом",
-                    start_parameter="from_group"
-                )
-            )
+        # Динамическое определение раздела по запросу пользователя
+        if any(w in user_query for w in ["кит", "kit", "фрейм", "апгрейд"]):
+            btn_text = "⚡ Открыть Upgrade Kits"
+            param = "upgrade_kits"
+        elif any(w in user_query for w in ["компонент", "запчаст", "колес", "групсет", "руль"]):
+            btn_text = "⚙️ Открыть Комплектующие"
+            param = "components"
+        elif any(w in user_query for w in ["полезн", "гайд", "ростовк", "база"]):
+            btn_text = "💡 Открыть Базу знаний"
+            param = "guides"
+        elif any(w in user_query for w in ["отзыв", "заказ"]):
+            btn_text = "⭐️ Читать Отзывы"
+            param = "reviews"
         else:
-            # В личке с ботом показываем весь список карточек
-            await query.answer(results, cache_time=0, is_personal=False)
+            # Вариант по умолчанию (если ввели просто @liferidelife_bot)
+            btn_text = "🚲 Открыть подбор и каталог велосипедов"
+            param = "bikes"
 
+        # Передаем пустой список результатов (results=[]), чтобы исключить отправку сообщений в группы.
+        # Единственное действие — нажатие на плашку перехода в ЛС.
+        await query.answer(
+            results=[],
+            cache_time=0,
+            is_personal=True,
+            button=InlineQueryResultsButton(
+                text=btn_text,
+                start_parameter=param
+            )
+        )
     except Exception as e:
         print(f"[ERROR] Inline query crash: {e}")
-        await query.answer([], cache_time=1, is_personal=False)
+        await query.answer([], cache_time=1, is_personal=True)
 
 async def on_startup(bot: Bot):
     await bot.set_webhook(WEBHOOK_URL, drop_pending_updates=True)
