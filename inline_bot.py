@@ -23,35 +23,14 @@ dp = Dispatcher()
 @dp.inline_query()
 async def inline_query_handler(query: types.InlineQuery):
     try:
-        user_query = query.query.strip().lower()
-
-        # Динамическое определение раздела по запросу пользователя
-        if any(w in user_query for w in ["кит", "kit", "фрейм", "апгрейд"]):
-            btn_text = "⚡ Открыть Upgrade Kits"
-            param = "upgrade_kits"
-        elif any(w in user_query for w in ["компонент", "запчаст", "колес", "групсет", "руль"]):
-            btn_text = "⚙️ Открыть Комплектующие"
-            param = "components"
-        elif any(w in user_query for w in ["полезн", "гайд", "ростовк", "база"]):
-            btn_text = "💡 Открыть Базу знаний"
-            param = "guides"
-        elif any(w in user_query for w in ["отзыв", "заказ"]):
-            btn_text = "⭐️ Читать Отзывы"
-            param = "reviews"
-        else:
-            # Вариант по умолчанию (если ввели просто @liferidelife_bot)
-            btn_text = "🚲 Открыть подбор и каталог велосипедов"
-            param = "bikes"
-
-        # Передаем пустой список результатов (results=[]), чтобы исключить отправку сообщений в группы.
-        # Единственное действие — нажатие на плашку перехода в ЛС.
+        # Единая универсальная кнопка: подбор вела, размера и каталог
         await query.answer(
             results=[],
             cache_time=0,
             is_personal=True,
             button=InlineQueryResultsButton(
-                text=btn_text,
-                start_parameter=param
+                text="🚲 Подбор вела, размера и каталог",
+                start_parameter="catalog"
             )
         )
     except Exception as e:
