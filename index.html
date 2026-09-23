@@ -560,7 +560,7 @@
     const appShortName = "app";
     
     const cleanId = String(bikeId).replace(/\s+/g, '_');
-    const directLink = `https://t.me/${botUsername}/${appShortName}?startapp=bike_${encodeURIComponent(cleanId)}`;
+    const directLink = `https://t.me/${botUsername}?startapp=bike_${encodeURIComponent(cleanId)}`;
     const shareText = `Зацени велосипед в LifeRideLife: ${bikeTitle} (${bikePrice}) 🚲🔥`;
     const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(directLink)}&text=${encodeURIComponent(shareText)}`;
     
