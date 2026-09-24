@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LifeRideLife Catalog</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
+ <style>
     :root {
       --bg-color: #18222d;
       --card-bg: #212d3b;
@@ -280,71 +280,92 @@
       background: #0369a1;
     }
     /* Стили модального окна Winspace */
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(4px);
-  z-index: 9999;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-}
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
 
-.modal-card {
-  background: #1c1c1e;
-  width: 100%;
-  max-width: 500px;
-  max-height: 85vh;
-  overflow-y: auto;
-  border-radius: 16px 16px 0 0;
-  padding: 20px;
-  box-sizing: border-box;
-  color: #fff;
-}
+    .modal-card {
+      background: #1c1c1e;
+      width: 100%;
+      max-width: 500px;
+      max-height: 85vh;
+      overflow-y: auto;
+      border-radius: 16px 16px 0 0;
+      padding: 20px;
+      box-sizing: border-box;
+      color: #fff;
+    }
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #2c2c2e;
-  padding-bottom: 12px;
-  margin-bottom: 16px;
-}
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #2c2c2e;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
 
-.modal-close-btn {
-  background: #2c2c2e;
-  border: none;
-  color: #fff;
-  font-size: 18px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  cursor: pointer;
-}
+    .modal-close-btn {
+      background: #2c2c2e;
+      border: none;
+      color: #fff;
+      font-size: 18px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
 
-.config-group {
-  margin-bottom: 14px;
-}
+    .config-group {
+      margin-bottom: 14px;
+    }
 
-.config-group label {
-  display: block;
-  font-size: 13px;
-  color: #8e8e93;
-  margin-bottom: 6px;
-}
+    .config-group label {
+      display: block;
+      font-size: 13px;
+      color: #8e8e93;
+      margin-bottom: 6px;
+    }
 
-.config-group select {
-  width: 100%;
-  padding: 12px;
-  background: #2c2c2e;
-  border: 1px solid #3a3a3c;
-  border-radius: 8px;
-  color: #fff;
-  font-size: 15px;
-  outline: none;
-}
+    .config-group select {
+      width: 100%;
+      padding: 12px;
+      background: #2c2c2e;
+      border: 1px solid #3a3a3c;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+    }
 
+    /* Кнопка "Поделиться калькулятором" */
+    .btn-secondary-share {
+      width: 100%;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      color: #ffffff;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .btn-secondary-share:active {
+      transform: scale(0.98);
+      background: rgba(255, 255, 255, 0.15);
+    }
   </style>
 
   <!-- Yandex.Metrika counter -->
@@ -531,6 +552,11 @@
           🚴 Подобрали для тебя! (170–180 см)
         </button>
       </div>
+      <div style="margin-top: 8px;">
+        <button type="button" class="btn-secondary-share" onclick="shareCalculatorLink()">
+          📤 Поделиться калькулятором
+        </button>
+      </div>
     </div>
   </div>
 
@@ -570,6 +596,21 @@
       window.open(shareUrl, '_blank');
     }
   } 
+
+  // Функция шеринга калькулятора подбора
+  function shareCalculatorLink() {
+    const botUsername = "liferidelife_bot";
+    const directLink = `https://t.me/${botUsername}?startapp=calculator`;
+    const shareText = "🚴‍♂️ Пользуйся удобным калькулятором подбора размера велосипеда, ETT и высоты седла в LifeRideLife:";
+    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(directLink)}&text=${encodeURIComponent(shareText)}`;
+    
+    if (window.Telegram?.WebApp?.openTelegramLink) {
+      window.Telegram.WebApp.openTelegramLink(shareUrl);
+    } else {
+      window.open(shareUrl, '_blank');
+    }
+  }
+
     let hasHandledDeepLink = false; // Флаг, чтобы сброс фильтров срабатывал только 1 раз при старте
     
   function checkDeepLink() {
