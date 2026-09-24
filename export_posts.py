@@ -4,6 +4,7 @@ import re
 import urllib.request
 from bs4 import BeautifulSoup
 
+
 def clean_text(text):
     if not text:
         return ""
@@ -85,6 +86,9 @@ def parse_channel():
     before_id = None
     processed_ids = set()
 
+    # Создаем папку images 1 раз в самом начале
+    os.makedirs("images", exist_ok=True)
+
     print("🚀 Начинаем считывание истории канала @LifeRideLife...")
 
     while True:
@@ -137,13 +141,10 @@ def parse_channel():
             if not tags:
                 continue
 
-                        os.makedirs("images", exist_ok=True)
-
             photo_wrap = msg.find(
                 "a", class_="tgme_widget_message_photo_wrap"
             ) or msg.find("div", class_="tgme_widget_message_photo_wrap")
             img_url = "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600"
-            
             if photo_wrap and "style" in photo_wrap.attrs:
                 match = re.search(
                     r"background-image:url\('([^']+)'\)", photo_wrap["style"]
