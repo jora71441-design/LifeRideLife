@@ -929,7 +929,15 @@
       
       // Проверка deep-link параметра из Telegram
       const startParam = tg?.initDataUnsafe?.start_param;
-      if (startParam) {
+      if (startParam === 'calculator') {
+        setCategory('guides'); // Переключаем во вкладку «Полезности»
+        setTimeout(() => {
+          const calcEl = document.getElementById('size-calculator');
+          if (calcEl) {
+            calcEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 300);
+      } else if (startParam) {
         setCategory(startParam);
       } else {
         renderCatalog();
