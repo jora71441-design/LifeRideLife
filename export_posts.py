@@ -1,8 +1,8 @@
 import json
+import os
 import re
 import urllib.request
 from bs4 import BeautifulSoup
-
 
 def clean_text(text):
     if not text:
@@ -137,16 +137,33 @@ def parse_channel():
             if not tags:
                 continue
 
+                        os.makedirs("images", exist_ok=True)
+
             photo_wrap = msg.find(
                 "a", class_="tgme_widget_message_photo_wrap"
             ) or msg.find("div", class_="tgme_widget_message_photo_wrap")
             img_url = "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600"
+            
             if photo_wrap and "style" in photo_wrap.attrs:
                 match = re.search(
                     r"background-image:url\('([^']+)'\)", photo_wrap["style"]
                 )
                 if match:
-                    img_url = match[1]
+                    remote_img_url = match[1]
+                    filename = f"bike_{msg_id}.jpg"
+                    local_path = os.path.join("images", filename)
+                    
+                    try:
+                        img_req = urllib.request.Request(
+                            remote_img_url,
+                            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+                        )
+                        with urllib.request.urlopen(img_req, timeout=15) as resp, open(local_path, "wb") as f:
+                            f.write(resp.read())
+                        img_url = f"./images/{filename}"
+                    except Exception as e:
+                        print(f"⚠️ Не удалось скачать фото для поста {msg_id}: {e}")
+                        img_url = remote_img_url
 
             title = extract_title(raw_text)
             price = extract_price(raw_text)
