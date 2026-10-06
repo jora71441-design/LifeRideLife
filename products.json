@@ -250,7 +250,7 @@
       "#liferidelife"
     ],
     "originalTagsText": "#0_150к #вналичии #160_170cm #эндуранс #шоссер #trek #shimano #liferidelife",
-    "imgUrl": "https://cdn4.telesco.pe/file/Mbs6VF0xe6C7cN40feobFuEzAZKsAgkY1siZ2b7IGxzNZaYZlLI5uNi-uzuUUzOP1K2tqRlQEzGbvTRfmnt0fNt0XBwWmx0JFcpK6BX7FE_aVXoqeHvy_0FDUg_5geGaVEYvbIUU0daTUkHGBRU0nv32pUkilgzGmRPnkJuFvX6Qa3Aq2G4Fw9LSqmsrjiITbrvje3vmRlvfFCdxZGSVdnw4rBm-qqoHtfF3Ct7FfyXDW21r0GkE153M5nY3tqWL2_nU5jj4a6peViqkmfK5BXsiRiXCwg02FwqT-OJaVpmLp0jEchCDhIJKF17f1JzeI0kwubJKtnvsZ3kjBEKN3A.jpg",
+    "imgUrl": "./images/bike_540.jpg",
     "price": "107 000 ₽",
     "postUrl": "https://t.me/LifeRideLife/540"
   },
@@ -306,7 +306,7 @@
       "#liferidelife"
     ],
     "originalTagsText": "#0_150к #вналичии #160_170cm #кроссач #гравел #shimano #liferidelife",
-    "imgUrl": "https://cdn4.telesco.pe/file/UxaArYF1UMwG2o_VhJguh_0nJ8tBJmzzhAFlR2JQaoH_toym9YqxAszV8smCCjL4AmG4eWRib0pT54DCoYCoXRDDJQOrK1WeG1g98pEh8Ow6YdHNiZP0wawfHW-2OeKMSM-fmvf7v6kAQ9JGbk8NxIQFKIo3AgF6VqBKsNN2UNB-UxlKwwk71_TFfcvcZYKZBTXHVmbB3L8hdkGIqGiy3kVK7TrbwusjBSYp-POPllRV8yEu8iDU0CqxwjU7vIEjEOWo_tki4KwYKVXqgcTHwYDpTKoCEfFfg0Qeiyw40QZpwDJFGgH0wNRu9gwcsaqsOYrQRg1lkf2e-Z5lmi57JA.jpg",
+    "imgUrl": "./images/bike_543.jpg",
     "price": "118 000 ₽",
     "postUrl": "https://t.me/LifeRideLife/543"
   },
@@ -580,7 +580,7 @@
       "#liferidelife"
     ],
     "originalTagsText": "#250_400к #вналичии #180_190cm #аэрошоссер #шоссер #shimano #ultegra #seka #электро #мощемер #liferidelife",
-    "imgUrl": "https://cdn4.telesco.pe/file/gENgBWAl0sTxXjhT0C6p-EpLWD5vPL-n9BE33onozteMEeUbjH29S-UxA3c5Gl9M1gZEY8znSF8_tBjG-W63umJlt8UcwEhA2RBsHvcX4H5v5Xhkf-R1TFC-5R_ns6sOWoiWtwEwrbjl0jaz06SRTs7zHTsKYuPqfRd3_0heGLrVXEj-vK6SWRv2jM1ucoRbhd7RO8eg2v31BuJh6kuUWiP3mTYq7X0tkhgAIHSbvgwKAJFVKZXBy426h24KLX5aSca2B1ZcMLGawiyTDxnf-B4pcDCI9KJWqPw1qlZXAKUgltRRrbcCldSrDqz53S-PY5NDFqgu2ZBIYduhn5_brg.jpg",
+    "imgUrl": "./images/bike_560.jpg",
     "price": "298 000 ₽",
     "postUrl": "https://t.me/LifeRideLife/560"
   },
@@ -690,7 +690,7 @@
       "#liferidelife"
     ],
     "originalTagsText": "#продано #liferidelife",
-    "imgUrl": "./images/bike_522.jpg",
+    "imgUrl": "https://cdn4.telesco.pe/file/FSKZLW0AQv5XbLpxgC0i5Zsj3cqyj9BkYjP87_5DqaDgQFSvgRiHFHB7qpOFObsl7NIRaUxZ-Hlxs9Ho9brTnEZOad4Y9p6myIjcWFDtYiSxhZKUA2uoFSlRHZNxJCE_l02fT6M_FVenEkfu7uNb726mn1Rc_LV1NnzRT_-7nmYzVyZGvFadWPsiQ4m_ZVudmwYEXAgqYxvX_UAVHEALIU9r_JE5fmQPV2jHO7RnNIAzW7q-3OdjNsPrOhNj4gGuq59qCyavZ4LWEVTlyEwg1aQ81LWN5G2h75LFHJt-2NojsWdCGYH4o2GyaydCqj4oOEScqxqXGLlkd8U07jkFmg.jpg",
     "price": "148 000 ₽",
     "postUrl": "https://t.me/LifeRideLife/522"
   },
@@ -1104,7 +1104,7 @@
       "#liferidelife"
     ],
     "originalTagsText": "#продано #liferidelife",
-    "imgUrl": "https://cdn4.telesco.pe/file/c9VSuaV5A5Cun6mdfqrwWo6nd9NFJmXv4loZ801DjGF6rYOy9BLrmWimByj9ZEap9d6ceonnso3U8YA_CerWfrJx9HCYYu3Akx2hrtnrK7RhWgjhJUI9lcRgR9kV7rIsiEsDCPuU2pNnqKdFNFg-zmoPfQsfzVcQqNQYyg-cS4ea1x4oJoXSfcS1YyLET_XM-nc7BuewaPakGTKYLERLdNi-xTrBGCVEAOGriN9Mf6kQTE1n7r2BB-gJVS8J7SzJ4H8ewVgmwTFY_BdEXjINHPx3KGlEMutfYFqkdlD33V2Bn9U9OdiKsJfwkiF8KIgwZUXLRM3vndc8k2yySY3XPQ.jpg",
+    "imgUrl": "./images/bike_511.jpg",
     "price": "178 000 ₽",
     "postUrl": "https://t.me/LifeRideLife/511"
   },
