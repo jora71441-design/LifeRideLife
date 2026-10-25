@@ -54,19 +54,18 @@ def extract_price(text):
 
     return "По запросу"
 
-
 def determine_category(tags_lower, raw_text_lower):
     """Автоматическое определение категории поста"""
-    if any(t in tags_lower for t in ["#отзыв", "#отзывы", "#покупка"]) or "отзыв" in raw_text_lower:
+    # Изолированная проверка слова "отзыв" (исключает "отзывчивый", "отзывчивость")
+    if any(t in tags_lower for t in ["#отзыв", "#отзывы", "#покупка"]) or re.search(r"\bотзыв(?:ы|а|е|ом|ов)?\b", raw_text_lower):
         return "reviews"
-    if any(t in tags_lower for t in ["#гайд", "#гайды", "#полезно", "#ростовка", "#обслуживание"]) or "гайд" in raw_text_lower:
+    if any(t in tags_lower for t in ["#гайд", "#гайды", "#полезно", "#ростовка", "#обслуживание"]) or re.search(r"\bгайд(?:ы|а|е|ом|ов)?\b", raw_text_lower):
         return "guides"
     if any(t in tags_lower for t in ["#фреймсет", "#kit", "#upgrade", "#комплект"]):
         return "upgrade_kits"
     if any(t in tags_lower for t in ["#запчасти", "#компоненты", "#групсет", "#колеса", "#руль", "#седло"]):
         return "components"
     return "bikes"
-
 
 def extract_title(text):
     """Поиск реального названия товара без эмодзи и статусов 'ПРОДАН'"""
@@ -135,10 +134,14 @@ def parse_channel():
             if not text_el:
                 continue
 
-            raw_text = clean_text(text_el.get_text("\n"))
+             raw_text = clean_text(text_el.get_text("\n"))
             tags = re.findall(r"#[a-zA-Z0-9_а-яА-ЯёЁ]+", raw_text)
 
             if not tags:
+                continue
+
+            # 1. Пропускаем проданные велосипеды
+            if any(t.lower() in ["#продано", "#продан"] for t in tags) or "продан" in raw_text.lower()[:40]:
                 continue
 
             photo_wrap = msg.find(
@@ -154,17 +157,21 @@ def parse_channel():
                     filename = f"bike_{msg_id}.jpg"
                     local_path = os.path.join("images", filename)
                     
-                    try:
-                        img_req = urllib.request.Request(
-                            remote_img_url,
-                            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-                        )
-                        with urllib.request.urlopen(img_req, timeout=15) as resp, open(local_path, "wb") as f:
-                            f.write(resp.read())
+                    # 2. Скачиваем фото только если его еще нет локально
+                    if not os.path.exists(local_path):
+                        try:
+                            img_req = urllib.request.Request(
+                                remote_img_url,
+                                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+                            )
+                            with urllib.request.urlopen(img_req, timeout=15) as resp, open(local_path, "wb") as f:
+                                f.write(resp.read())
+                            img_url = f"./images/{filename}"
+                        except Exception as e:
+                            print(f"⚠️ Не удалось скачать фото для поста {msg_id}: {e}")
+                            img_url = remote_img_url
+                    else:
                         img_url = f"./images/{filename}"
-                    except Exception as e:
-                        print(f"⚠️ Не удалось скачать фото для поста {msg_id}: {e}")
-                        img_url = remote_img_url
 
             title = extract_title(raw_text)
             price = extract_price(raw_text)
