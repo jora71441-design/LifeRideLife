@@ -67,6 +67,7 @@ def determine_category(tags_lower, raw_text_lower):
         return "components"
     return "bikes"
 
+
 def extract_title(text):
     """Поиск реального названия товара без эмодзи и статусов 'ПРОДАН'"""
     lines = [clean_text(l) for l in text.split("\n") if clean_text(l)]
@@ -134,7 +135,7 @@ def parse_channel():
             if not text_el:
                 continue
 
-             raw_text = clean_text(text_el.get_text("\n"))
+            raw_text = clean_text(text_el.get_text("\n"))
             tags = re.findall(r"#[a-zA-Z0-9_а-яА-ЯёЁ]+", raw_text)
 
             if not tags:
