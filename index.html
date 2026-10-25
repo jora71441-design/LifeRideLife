@@ -579,11 +579,8 @@
 
   <script>
   // === 1. ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И НАСТРОЙКИ ===
-  // Функция нативного шеринга велосипеда в Telegram
   function shareBike(bikeId, bikeTitle, bikePrice) {
     const botUsername = "liferidelife_bot";
-    const appShortName = "app";
-    
     const cleanId = String(bikeId).replace(/\s+/g, '_');
     const directLink = `https://t.me/${botUsername}?startapp=bike_${encodeURIComponent(cleanId)}`;
     const shareText = `Зацени велосипед в LifeRideLife: ${bikeTitle} (${bikePrice}) 🚲🔥`;
@@ -596,7 +593,6 @@
     }
   } 
 
-  // Функция шеринга калькулятора подбора
   function shareCalculatorLink() {
     const botUsername = "liferidelife_bot";
     const directLink = `https://t.me/${botUsername}?startapp=calculator`;
@@ -610,9 +606,6 @@
     }
   }
 
-    let hasHandledDeepLink = false; // Флаг, чтобы сброс фильтров срабатывал только 1 раз при старте
-    
-  function checkDeepLink() {
   let hasHandledDeepLink = false;
 
   function handleBikeDeepLink(startParam) {
@@ -629,7 +622,6 @@
     if (targetBike) {
       hasHandledDeepLink = true;
 
-      // Если в старом products.json категория осталась reviews, принудительно ставим bikes
       let targetCat = (targetBike.category || 'bikes').toLowerCase();
       if (targetCat === 'reviews' && !targetBike.tags?.some(t => t.includes('отзыв'))) {
         targetCat = 'bikes';
@@ -637,7 +629,6 @@
 
       setCategory(targetCat);
 
-      // Прокручиваем к карточке по ID после отрисовки
       setTimeout(() => {
         const card = document.getElementById(`bike-${targetBike.id}`);
         if (card) {
@@ -666,7 +657,6 @@
     tg.expand();
   }
 
-  // Внешние ссылки с трекингом Яндекс Метрики
   function openExternalLink(url) {
     if (window.ym) {
       ym(112661781, 'reachGoal', 'click_fititi');
@@ -692,88 +682,49 @@
     updateCalc();
   }
 
-    // Переход от калькулятора к каталогу с установкой фильтра по росту
   function applyMatchedBikeFilter() {
-      const heightEl = document.getElementById('calc-height');
-      if (!heightEl) return;
-      if (window.ym) ym(112661781, 'reachGoal', 'click_matched');
-  
-      const height = parseInt(heightEl.value);
-      let targetTag = '#170_180cm';
-  
-      if (height < 160) targetTag = '#150_160cm';
-      else if (height < 170) targetTag = '#160_170cm';
-      else if (height < 180) targetTag = '#170_180cm';
-      else if (height < 190) targetTag = '#180_190cm';
-      else targetTag = '#190_200cm';
-  
-      // 1. СНАЧАЛА переключаем категорию на велосипеды (это сбросит старые теги)
-      setCategory('bikes');
-  
-      // 2. ПОТОМ добавляем нужный тег ростовки
-      selectedTags.add(targetTag);
-  
-      // 3. Обновляем визуальное выделение пиллов-тегов в фильтрах
-      document.querySelectorAll('.tag-pill').forEach(pill => {
-        const onclickAttr = pill.getAttribute('onclick') || '';
-        if (onclickAttr.includes(`'${targetTag}'`)) {
-          pill.classList.add('active');
-        } else {
-          pill.classList.remove('active');
-        }
-      });
-  
-      // 4. Обязательно перерисовываем каталог, чтобы применился новый тег
-      renderCatalog();
-  
-      // 5. Прокручиваем вверх к каталогу
-      const catalogEl = document.getElementById('catalog');
-      if (catalogEl) {
-          catalogEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const heightEl = document.getElementById('calc-height');
+    if (!heightEl) return;
+    if (window.ym) ym(112661781, 'reachGoal', 'click_matched');
+
+    const height = parseInt(heightEl.value);
+    let targetTag = '#170_180cm';
+
+    if (height < 160) targetTag = '#150_160cm';
+    else if (height < 170) targetTag = '#160_170cm';
+    else if (height < 180) targetTag = '#170_180cm';
+    else if (height < 190) targetTag = '#180_190cm';
+    else targetTag = '#190_200cm';
+
+    setCategory('bikes');
+    selectedTags.add(targetTag);
+
+    document.querySelectorAll('.tag-pill').forEach(pill => {
+      const onclickAttr = pill.getAttribute('onclick') || '';
+      if (onclickAttr.includes(`'${targetTag}'`)) {
+        pill.classList.add('active');
+      } else {
+        pill.classList.remove('active');
       }
+    });
+
+    renderCatalog();
+
+    const catalogEl = document.getElementById('catalog');
+    if (catalogEl) {
+      catalogEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
-  // Таблица рекомендуемого ETT под рост и тип байка
   const sizeTable = [
-    {
-      minH: 155, maxH: 162,
-      road_race: "500–510 мм (XXS)",
-      endurance: "505–515 мм (XXS)",
-      gravel:    "505–520 мм (XXS)"
-    },
-    {
-      minH: 163, maxH: 170,
-      road_race: "515–530 мм (XS)",
-      endurance: "520–535 мм (XS/S)",
-      gravel:    "525–540 мм (XS)"
-    },
-    {
-      minH: 171, maxH: 178,
-      road_race: "535–550 мм (S/M)",
-      endurance: "540–555 мм (M)",
-      gravel:    "545–560 мм (S/M)"
-    },
-    {
-      minH: 179, maxH: 186,
-      road_race: "555–570 мм (M/L)",
-      endurance: "560–575 мм (L)",
-      gravel:    "565–580 мм (M/L)"
-    },
-    {
-      minH: 187, maxH: 194,
-      road_race: "575–590 мм (L/XL)",
-      endurance: "580–595 мм (XL)",
-      gravel:    "585–605 мм (XL)"
-    },
-    {
-      minH: 195, maxH: 205,
-      road_race: "595–615 мм (XXL)",
-      endurance: "600–615 мм (XXL)",
-      gravel:    "605–625 мм (XXL)"
-    }
+    { minH: 155, maxH: 162, road_race: "500–510 мм (XXS)", endurance: "505–515 мм (XXS)", gravel: "505–520 мм (XXS)" },
+    { minH: 163, maxH: 170, road_race: "515–530 мм (XS)", endurance: "520–535 мм (XS/S)", gravel: "525–540 мм (XS)" },
+    { minH: 171, maxH: 178, road_race: "535–550 мм (S/M)", endurance: "540–555 мм (M)", gravel: "545–560 мм (S/M)" },
+    { minH: 179, maxH: 186, road_race: "555–570 мм (M/L)", endurance: "560–575 мм (L)", gravel: "565–580 мм (M/L)" },
+    { minH: 187, maxH: 194, road_race: "575–590 мм (L/XL)", endurance: "580–595 мм (XL)", gravel: "585–605 мм (XL)" },
+    { minH: 195, maxH: 205, road_race: "595–615 мм (XXL)", endurance: "600–615 мм (XXL)", gravel: "605–625 мм (XXL)" }
   ];
 
-  // Основная функция перерасчета значений
   function updateCalc() {
     const heightEl = document.getElementById('calc-height');
     const inseamEl = document.getElementById('calc-inseam');
@@ -783,18 +734,15 @@
     const height = parseInt(heightEl.value);
     const inseam = parseInt(inseamEl.value);
 
-    // Обновляем цифры над ползунками
     const valHeight = document.getElementById('val-height');
     const valInseam = document.getElementById('val-inseam');
     if (valHeight) valHeight.innerText = height;
     if (valInseam) valInseam.innerText = inseam;
 
-    // Расчет высоты седла по LeMond
     const saddleHeight = (inseam * 0.883).toFixed(1);
     const resSaddle = document.getElementById('res-saddle');
     if (resSaddle) resSaddle.innerText = `${saddleHeight} см`;
 
-    // Поиск диапазона ETT в таблице по росту
     let matchedData = sizeTable.find(row => height >= row.minH && height <= row.maxH);
     if (!matchedData) {
       matchedData = height < 155 ? sizeTable[0] : sizeTable[sizeTable.length - 1];
@@ -803,11 +751,9 @@
     const typeKey = currentBikeType || 'road_race';
     const ettResult = matchedData[typeKey] || matchedData['road_race'];
 
-    // Выводим ETT в карточку результатов
     const resSize = document.getElementById('res-size');
     if (resSize) resSize.innerText = ettResult;
 
-    // Анализ пропорций (Отношение Инсима к Росту)
     const ratio = inseam / height;
     let anatomyText = "";
     let tipText = "";
@@ -828,7 +774,6 @@
     if (resAnatomy) resAnatomy.innerText = anatomyText;
     if (resTip) resTip.innerText = tipText;
 
-    // Обновляем диапазон роста на кнопке подбора
     const btnShow = document.getElementById('btn-show-matched-bikes');
     if (btnShow) {
       let rangeText = "170–180 см";
@@ -843,24 +788,21 @@
   }
 
   // === 3. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ===
-    function setCategory(cat) {
+  function setCategory(cat) {
     currentCategory = cat;
 
-    // === ЖЕЛЕЗНЫЙ ПЕРЕХВАТ ДЛЯ WINSPACE ===
     if (cat === 'winspace') {
       if (typeof openWinspaceCatalog === 'function') {
         openWinspaceCatalog('complete', 'all');
       } else {
         console.error('Функция openWinspaceCatalog не найдена!');
       }
-      return; // Прерываем выполнение, чтобы НЕ запускать renderCatalog()
+      return;
     }
 
-    // 1. Сбрасываем выбранные фильтры при смене категории
     selectedTags.clear();
     document.querySelectorAll('.tag-pill').forEach(pill => pill.classList.remove('active'));
 
-    // 2. Подсвечиваем активную вкладку
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.classList.remove('active');
       const onclickAttr = btn.getAttribute('onclick') || '';
@@ -870,13 +812,11 @@
       }
     });
 
-    // 3. Показываем блок фильтров СТРОГО для велосипедов
     const filtersDiv = document.getElementById('filters');
     if (filtersDiv) {
       filtersDiv.style.display = (cat === 'bikes') ? 'block' : 'none';
     }
 
-    // 4. Показываем калькулятор и Fititi только в Полезностях
     const calcDiv = document.getElementById('size-calculator');
     const fititiDiv = document.getElementById('fititi-card');
 
@@ -891,7 +831,6 @@
       if (fititiDiv) fititiDiv.style.display = 'none';
     }
 
-    // 5. Обновляем обычный каталог (только для б/у байков, гидов и отзывов)
     renderCatalog();
   }
 
@@ -916,9 +855,6 @@
       
       postsData = await response.json();
       
-      // Проверка deep-link параметра из Telegram
-      const startParam = tg?.initDataUnsafe?.start_param;
-      // Проверка deep-link параметра из Telegram
       const startParam = tg?.initDataUnsafe?.start_param;
       if (startParam === 'calculator') {
         setCategory('guides');
@@ -944,7 +880,7 @@
     }
   }
 
-    function renderCatalog() {
+  function renderCatalog() {
     const catalogEl = document.getElementById('catalog');
     if (!catalogEl) return;
 
@@ -954,16 +890,10 @@
     }
 
     const filtered = postsData.filter(post => {
-
-    // Сбрасываем блокирующие фильтры до начала выборки, если перешли по диплинку
-    checkDeepLink();
-
-    const filtered = postsData.filter(post => {
       let cat = (post.category || 'bikes').toLowerCase();
       const tags = (post.tags || []).map(t => t.toLowerCase());
       const raw = (post.rawText || '').toLowerCase();
 
-      // Железный фильтр категорий
       const isReview = tags.some(t => t.includes('отзыв')) || raw.includes('#отзыв');
       const isGuide = tags.some(t => t.includes('полезное') || t.includes('гайд')) || raw.includes('#полезное') || raw.includes('#гайд');
       
@@ -977,7 +907,6 @@
 
       if (currentCategory !== cat) return false;
 
-      // Фильтрация по кнопкам-тегам
       for (let tag of selectedTags) {
         const cleanTag = tag.toLowerCase().replace('к', 'k');
         const match = tags.some(t => t.includes(cleanTag)) || raw.includes(cleanTag);
@@ -1020,7 +949,7 @@
               <button onclick="shareBike('${post.id || post.title}', '${titleText.replace(/'/g, "\\'")}', '${post.price || 'По запросу'}')" class="btn" style="flex: 1; padding: 8px 2px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #fff; cursor: pointer; font-size: 11px; text-align: center;">🔗 Отправить</button>
             </div>
           </div>
-                </div>
+        </div>
       `;
     }).join('');
   }
