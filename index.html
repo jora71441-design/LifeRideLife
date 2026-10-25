@@ -418,7 +418,6 @@
         <span class="tag-pill" onclick="toggleTag(this, '#вналичии')">#вналичии</span>
         <span class="tag-pill" onclick="toggleTag(this, '#подвыкуп')">#подвыкуп</span>
         <span class="tag-pill" onclick="toggleTag(this, '#подзаказ')">#подзаказ</span>
-        <span class="tag-pill" onclick="toggleTag(this, '#продано')">#продано</span>
       </div>
     </div>
 
@@ -614,49 +613,39 @@
     let hasHandledDeepLink = false; // Флаг, чтобы сброс фильтров срабатывал только 1 раз при старте
     
   function checkDeepLink() {
-    if (hasHandledDeepLink) return;
+  let hasHandledDeepLink = false;
 
-    const tg = window.Telegram?.WebApp;
-    if (!tg) return;
+  function handleBikeDeepLink(startParam) {
+    if (hasHandledDeepLink || !postsData || postsData.length === 0) return;
 
-    const startParam = tg.initDataUnsafe?.start_param;
-    if (!startParam || !startParam.startsWith('bike_')) return;
+    const rawId = decodeURIComponent(startParam.replace('bike_', '')).trim().toLowerCase();
 
-    if (!postsData || postsData.length === 0) return;
-
-    const rawBikeId = decodeURIComponent(startParam.replace('bike_', '')).toLowerCase();
-
-    // Ищем велосипед в базе
     const targetBike = postsData.find(post => {
-      const bikeId = String(post.id || '').toLowerCase();
-      const bikeTitle = String(post.title || '').toLowerCase().replace(/\s+/g, '_');
-      return bikeId === rawBikeId || bikeTitle.includes(rawBikeId) || rawBikeId.includes(bikeTitle);
+      const bId = String(post.id || '').toLowerCase();
+      const bTitle = String(post.title || '').toLowerCase().replace(/\s+/g, '_');
+      return bId === rawId || bTitle.includes(rawId) || rawId.includes(bTitle);
     });
 
     if (targetBike) {
       hasHandledDeepLink = true;
 
-      // Сбрасываем фильтры, чтобы велосипед точно отобразился
-      selectedTags.clear();
-      if (typeof currentBikeType !== 'undefined') {
-        currentBikeType = 'all'; 
+      // Если в старом products.json категория осталась reviews, принудительно ставим bikes
+      let targetCat = (targetBike.category || 'bikes').toLowerCase();
+      if (targetCat === 'reviews' && !targetBike.tags?.some(t => t.includes('отзыв'))) {
+        targetCat = 'bikes';
       }
-      currentCategory = (targetBike.category || 'bikes').toLowerCase();
 
-      // Подсвечиваем и прокручиваем к карточке
+      setCategory(targetCat);
+
+      // Прокручиваем к карточке по ID после отрисовки
       setTimeout(() => {
-        const cards = document.querySelectorAll('.card');
-        cards.forEach(card => {
-          const title = card.querySelector('.card-title')?.innerText.toLowerCase() || '';
-          const targetTitle = (targetBike.title || '').toLowerCase();
-
-          if (title && (title.includes(targetTitle) || targetTitle.includes(title))) {
-            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            card.style.border = '2px solid #0088cc';
-            card.style.boxShadow = '0 0 15px rgba(0, 136, 204, 0.6)';
-          }
-        });
-      }, 300);
+        const card = document.getElementById(`bike-${targetBike.id}`);
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          card.style.border = '2px solid #24a1de';
+          card.style.boxShadow = '0 0 18px rgba(36, 161, 222, 0.7)';
+        }
+      }, 350);
     }
   }
 
@@ -929,15 +918,20 @@
       
       // Проверка deep-link параметра из Telegram
       const startParam = tg?.initDataUnsafe?.start_param;
+      // Проверка deep-link параметра из Telegram
+      const startParam = tg?.initDataUnsafe?.start_param;
       if (startParam === 'calculator') {
-        setCategory('guides'); // Переключаем во вкладку «Полезности»
+        setCategory('guides');
         setTimeout(() => {
           const calcEl = document.getElementById('size-calculator');
           if (calcEl) {
             calcEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
         }, 300);
-      } else if (startParam) {
+      } else if (startParam && startParam.startsWith('bike_')) {
+        renderCatalog();
+        handleBikeDeepLink(startParam);
+      } else if (startParam && ['bikes', 'upgrade_kits', 'components', 'guides', 'reviews', 'winspace'].includes(startParam)) {
         setCategory(startParam);
       } else {
         renderCatalog();
@@ -958,6 +952,8 @@
       catalogEl.innerHTML = '<div class="status-msg">⏳ Загрузка базы товаров...</div>';
       return;
     }
+
+    const filtered = postsData.filter(post => {
 
     // Сбрасываем блокирующие фильтры до начала выборки, если перешли по диплинку
     checkDeepLink();
@@ -1003,8 +999,8 @@
       const imgUrl = post.imgUrl || fallbackImg;
 
       return `
-        <div class="card">
-          <img 
+        <div class="card" id="bike-${post.id}">
+          <img
             src="${imgUrl}" 
             class="card-img" 
             alt="${titleText}" 
