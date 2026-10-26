@@ -206,11 +206,60 @@ def parse_channel():
 
         before_id = min_msg_id
 
-    with open("products.json", "w", encoding="utf-8") as f:
+        with open("products.json", "w", encoding="utf-8") as f:
         json.dump(all_posts, f, ensure_ascii=False, indent=2)
 
-    print(f"🎉 ГОТОВО! Собрано {len(all_posts)} товаров.")
+    # Создаем папку share для генерации страниц предпросмотра (OG Preview)
+    os.makedirs("share", exist_ok=True)
+    base_repo_url = "https://jora71441-design.github.io/LifeRideLife"
 
+    for post in all_posts:
+        bike_id = post["id"]
+        title = post.get("title", "Велосипед LifeRideLife").replace('"', '&quot;')
+        price = post.get("price", "По запросу")
+        img_rel = post.get("imgUrl", "")
+
+        # Превращаем относительный путь картинки в абсолютный для робота Telegram
+        if img_rel.startswith("./"):
+            og_img = f"{base_repo_url}/{img_rel[2:]}"
+        elif img_rel.startswith("http"):
+            og_img = img_rel
+        else:
+            og_img = f"{base_repo_url}/{img_rel}"
+
+        target_app_url = f"https://t.me/liferidelife_bot?startapp=bike_{bike_id}"
+
+        html_content = f"""<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>{title} — {price}</title>
+  
+  <!-- Open Graph / Telegram Preview Meta -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{title} ({price})">
+  <meta property="og:description" content="Подбор, сопровождение и доставка шоссейных и гравийных велосипедов | LifeRideLife">
+  <meta property="og:image" content="{og_img}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="800">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- Мгновенный переход в приложение -->
+  <meta http-equiv="refresh" content="0; url={target_app_url}">
+  <script>
+    window.location.replace("{target_app_url}");
+  </script>
+</head>
+<body style="background:#18222d; color:#fff; font-family:sans-serif; text-align:center; padding:40px;">
+  <h2>Перенаправление в LifeRideLife Mini App...</h2>
+  <p><a href="{target_app_url}" style="color:#24a1de; font-size:18px;">Нажмите здесь, если переход не произошел автоматически</a></p>
+</body>
+</html>"""
+
+        with open(os.path.join("share", f"bike_{bike_id}.html"), "w", encoding="utf-8") as sf:
+            sf.write(html_content)
+
+    print(f"🎉 ГОТОВО! Собрано {len(all_posts)} товаров и сгенерированы карточки шеринга в /share.")
 
 if __name__ == "__main__":
     parse_channel()
