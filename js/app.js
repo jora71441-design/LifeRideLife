@@ -22,13 +22,13 @@ if (tg) {
 
 const fallbackImg = 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600';
 
-// Нативный шеринг велосипеда в Telegram
+// Нативный шеринг велосипеда в Telegram с динамическим OG-превью фото
 function shareBike(bikeId, bikeTitle, bikePrice) {
-  const botUsername = "liferidelife_bot";
   const cleanId = String(bikeId).replace(/\s+/g, '_');
-  const directLink = `https://t.me/${botUsername}?startapp=bike_${encodeURIComponent(cleanId)}`;
+  // Ссылка ведет на сгенерированную страницу с тегами og:image и заголовком байка
+  const shareLandingUrl = `https://jora71441-design.github.io/LifeRideLife/share/bike_${encodeURIComponent(cleanId)}.html`;
   const shareText = `Зацени велосипед в LifeRideLife: ${bikeTitle} (${bikePrice}) 🚲🔥`;
-  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(directLink)}&text=${encodeURIComponent(shareText)}`;
+  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareLandingUrl)}&text=${encodeURIComponent(shareText)}`;
   
   if (window.Telegram?.WebApp?.openTelegramLink) {
     window.Telegram.WebApp.openTelegramLink(shareUrl);
