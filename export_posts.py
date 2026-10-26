@@ -205,8 +205,10 @@ def parse_channel():
             break
 
         before_id = min_msg_id
+        before_id = min_msg_id
 
-        with open("products.json", "w", encoding="utf-8") as f:
+    # Сохраняем общий каталог products.json
+    with open("products.json", "w", encoding="utf-8") as f:
         json.dump(all_posts, f, ensure_ascii=False, indent=2)
 
     # Создаем папку share для генерации страниц предпросмотра (OG Preview)
@@ -260,6 +262,7 @@ def parse_channel():
             sf.write(html_content)
 
     print(f"🎉 ГОТОВО! Собрано {len(all_posts)} товаров и сгенерированы карточки шеринга в /share.")
+
 
 if __name__ == "__main__":
     parse_channel()
