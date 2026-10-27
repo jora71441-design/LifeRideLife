@@ -231,30 +231,39 @@ def parse_channel():
 
         target_app_url = f"https://t.me/liferidelife_bot?startapp=bike_{bike_id}"
 
-        html_content = f"""<!DOCTYPE html>
+                html_content = f"""<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{title} — {price}</title>
   
   <!-- Open Graph / Telegram Preview Meta -->
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="{title} ({price})">
-  <meta property="og:description" content="Подбор, сопровождение и доставка шоссейных и гравийных велосипедов | LifeRideLife">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="LifeRideLife">
+  <meta property="og:title" content="{title}">
+  <meta property="og:description" content="{price} • В наличии / под заказ в LifeRideLife">
   <meta property="og:image" content="{og_img}">
+  <meta property="og:image:secure_url" content="{og_img}">
+  <meta property="og:image:type" content="image/jpeg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="800">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{title}">
+  <meta name="twitter:description" content="{price} • В наличии / под заказ в LifeRideLife">
+  <meta name="twitter:image" content="{og_img}">
 
-  <!-- Мгновенный переход в приложение -->
-  <meta http-equiv="refresh" content="0; url={target_app_url}">
+  <!-- Мгновенный переход в приложение для реальных пользователей (краулеры JS не исполняют) -->
   <script>
     window.location.replace("{target_app_url}");
   </script>
 </head>
-<body style="background:#18222d; color:#fff; font-family:sans-serif; text-align:center; padding:40px;">
-  <h2>Перенаправление в LifeRideLife Mini App...</h2>
-  <p><a href="{target_app_url}" style="color:#24a1de; font-size:18px;">Нажмите здесь, если переход не произошел автоматически</a></p>
+<body style="background:#18222d; color:#fff; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; text-align:center; padding:40px 20px;">
+  <h2 style="font-size:22px; margin-bottom:8px;">{title}</h2>
+  <p style="color:#24a1de; font-size:18px; font-weight:bold; margin-bottom:24px;">{price}</p>
+  <a href="{target_app_url}" style="display:inline-block; background:#24a1de; color:#fff; padding:14px 28px; border-radius:12px; text-decoration:none; font-weight:bold; font-size:16px;">
+    🚴‍♂️ Открыть в приложении LifeRideLife
+  </a>
 </body>
 </html>"""
 
