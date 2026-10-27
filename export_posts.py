@@ -54,9 +54,10 @@ def extract_price(text):
 
     return "По запросу"
 
+
 def determine_category(tags_lower, raw_text_lower):
     """Автоматическое определение категории поста"""
-    # Изолированная проверка слова "отзыв" (исключает "отзывчивый", "отзывчивость")
+    # Строгая проверка изолированного слова "отзыв" или соответствующих хэштегов
     if any(t in tags_lower for t in ["#отзыв", "#отзывы", "#покупка"]) or re.search(r"\bотзыв(?:ы|а|е|ом|ов)?\b", raw_text_lower):
         return "reviews"
     if any(t in tags_lower for t in ["#гайд", "#гайды", "#полезно", "#ростовка", "#обслуживание"]) or re.search(r"\bгайд(?:ы|а|е|ом|ов)?\b", raw_text_lower):
@@ -141,7 +142,7 @@ def parse_channel():
             if not tags:
                 continue
 
-            # 1. Пропускаем проданные велосипеды
+            # Исключаем проданные позиции
             if any(t.lower() in ["#продано", "#продан"] for t in tags) or "продан" in raw_text.lower()[:40]:
                 continue
 
@@ -158,7 +159,7 @@ def parse_channel():
                     filename = f"bike_{msg_id}.jpg"
                     local_path = os.path.join("images", filename)
                     
-                    # 2. Скачиваем фото только если его еще нет локально
+                    # Скачиваем фото только если его еще нет локально
                     if not os.path.exists(local_path):
                         try:
                             img_req = urllib.request.Request(
@@ -205,7 +206,6 @@ def parse_channel():
             break
 
         before_id = min_msg_id
-        before_id = min_msg_id
 
     # Сохраняем общий каталог products.json
     with open("products.json", "w", encoding="utf-8") as f:
@@ -215,8 +215,7 @@ def parse_channel():
     os.makedirs("share", exist_ok=True)
     base_repo_url = "https://jora71441-design.github.io/LifeRideLife"
 
-
-        for post in all_posts:
+    for post in all_posts:
         bike_id = post["id"]
         title = post.get("title", "Велосипед LifeRideLife").replace('"', '&quot;')
         price = post.get("price", "По запросу")
