@@ -215,7 +215,8 @@ def parse_channel():
     os.makedirs("share", exist_ok=True)
     base_repo_url = "https://jora71441-design.github.io/LifeRideLife"
 
-    for post in all_posts:
+
+        for post in all_posts:
         bike_id = post["id"]
         title = post.get("title", "Велосипед LifeRideLife").replace('"', '&quot;')
         price = post.get("price", "По запросу")
@@ -231,7 +232,7 @@ def parse_channel():
 
         target_app_url = f"https://t.me/liferidelife_bot?startapp=bike_{bike_id}"
 
-                html_content = f"""<!DOCTYPE html>
+        html_content = f"""<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
