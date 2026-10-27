@@ -22,18 +22,17 @@ if (tg) {
 
 const fallbackImg = 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600';
 
-// Нативный инлайн-шеринг карточки велосипеда без внешних ссылок в сообщении
+// Нативный шеринг велосипеда в Telegram с большой фотографией
 function shareBike(bikeId, bikeTitle, bikePrice) {
   const cleanId = String(bikeId).replace(/\s+/g, '_');
-  const inlineQuery = `bike_${cleanId}`;
+  const shareLandingUrl = `https://jora71441-design.github.io/LifeRideLife/share/bike_${encodeURIComponent(cleanId)}.html`;
+  const shareText = `Зацени велосипед в LifeRideLife: ${bikeTitle} (${bikePrice}) 🚲🔥`;
+  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareLandingUrl)}&text=${encodeURIComponent(shareText)}`;
 
-  // Открывает нативный диалог выбора чата в Telegram и подставляет @liferidelife_bot bike_<id>
-  if (window.Telegram?.WebApp?.switchInlineQuery) {
-    window.Telegram.WebApp.switchInlineQuery(inlineQuery, ['users', 'groups', 'channels']);
+  if (window.Telegram?.WebApp?.openTelegramLink) {
+    window.Telegram.WebApp.openTelegramLink(shareUrl);
   } else {
-    // Резервный вариант, если открыто в обычном браузере
-    const fallbackLink = `https://t.me/liferidelife_bot?startapp=${inlineQuery}`;
-    window.open(`https://t.me/share/url?url=${encodeURIComponent(fallbackLink)}`, '_blank');
+    window.open(shareUrl, '_blank');
   }
 }
 
