@@ -25,8 +25,8 @@ const fallbackImg = 'https://images.unsplash.com/photo-1485965120184-e220f721d03
 // Нативный шеринг велосипеда в Telegram с динамическим OG-превью фото
 function shareBike(bikeId, bikeTitle, bikePrice) {
   const cleanId = String(bikeId).replace(/\s+/g, '_');
-  // Ссылка ведет на сгенерированную страницу с тегами og:image и заголовком байка
-  const shareLandingUrl = `https://jora71441-design.github.io/LifeRideLife/share/bike_${encodeURIComponent(cleanId)}.html`;
+  // Параметр ?v=1 сбрасывает старый закешированный Telegram редирект
+  const shareLandingUrl = `https://jora71441-design.github.io/LifeRideLife/share/bike_${encodeURIComponent(cleanId)}.html?v=1`;
   const shareText = `Зацени велосипед в LifeRideLife: ${bikeTitle} (${bikePrice}) 🚲🔥`;
   const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareLandingUrl)}&text=${encodeURIComponent(shareText)}`;
   
