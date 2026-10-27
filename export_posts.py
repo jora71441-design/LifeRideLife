@@ -229,7 +229,8 @@ def parse_channel():
         else:
             og_img = f"{base_repo_url}/{img_rel}"
 
-        target_app_url = f"https://t.me/liferidelife_bot?startapp=bike_{bike_id}"
+                target_app_url = f"https://t.me/liferidelife_bot?startapp=bike_{bike_id}"
+        tg_native_url = f"tg://resolve?domain=liferidelife_bot&startapp=bike_{bike_id}"
 
         html_content = f"""<!DOCTYPE html>
 <html lang="ru">
@@ -253,15 +254,18 @@ def parse_channel():
   <meta name="twitter:description" content="{price} • В наличии / под заказ в LifeRideLife">
   <meta name="twitter:image" content="{og_img}">
 
-  <!-- Мгновенный переход в приложение для реальных пользователей (краулеры JS не исполняют) -->
+  <!-- Мгновенный бесшовный переход через протокол tg:// -->
   <script>
-    window.location.replace("{target_app_url}");
+    window.location.href = "{tg_native_url}";
+    setTimeout(function() {{
+      window.location.href = "{target_app_url}";
+    }}, 300);
   </script>
 </head>
 <body style="background:#18222d; color:#fff; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; text-align:center; padding:40px 20px;">
-  <h2 style="font-size:22px; margin-bottom:8px;">{title}</h2>
-  <p style="color:#24a1de; font-size:18px; font-weight:bold; margin-bottom:24px;">{price}</p>
-  <a href="{target_app_url}" style="display:inline-block; background:#24a1de; color:#fff; padding:14px 28px; border-radius:12px; text-decoration:none; font-weight:bold; font-size:16px;">
+  <h2 style="font-size:20px; margin-bottom:8px;">{title}</h2>
+  <p style="color:#24a1de; font-size:18px; font-weight:bold; margin-bottom:20px;">{price}</p>
+  <a href="{tg_native_url}" style="display:inline-block; background:#24a1de; color:#fff; padding:12px 24px; border-radius:10px; text-decoration:none; font-weight:bold; font-size:15px;">
     🚴‍♂️ Открыть в приложении LifeRideLife
   </a>
 </body>
