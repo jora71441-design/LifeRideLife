@@ -1,8 +1,10 @@
+import io
 import json
 import os
 import re
 import urllib.request
 from bs4 import BeautifulSoup
+from PIL import Image
 
 
 def clean_text(text):
@@ -57,7 +59,6 @@ def extract_price(text):
 
 def determine_category(tags_lower, raw_text_lower):
     """Автоматическое определение категории поста"""
-    # Строгая проверка изолированного слова "отзыв" или соответствующих хэштегов
     if any(t in tags_lower for t in ["#отзыв", "#отзывы", "#покупка"]) or re.search(r"\bотзыв(?:ы|а|е|ом|ов)?\b", raw_text_lower):
         return "reviews"
     if any(t in tags_lower for t in ["#гайд", "#гайды", "#полезно", "#ростовка", "#обслуживание"]) or re.search(r"\bгайд(?:ы|а|е|ом|ов)?\b", raw_text_lower):
@@ -156,21 +157,29 @@ def parse_channel():
                 )
                 if match:
                     remote_img_url = match[1]
-                    filename = f"bike_{msg_id}.jpg"
+                    filename = f"bike_{msg_id}.webp"
                     local_path = os.path.join("images", filename)
                     
-                    # Скачиваем фото только если его еще нет локально
+                    # Скачиваем и жмём в WebP только если файла ещё нет
                     if not os.path.exists(local_path):
                         try:
                             img_req = urllib.request.Request(
                                 remote_img_url,
                                 headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
                             )
-                            with urllib.request.urlopen(img_req, timeout=15) as resp, open(local_path, "wb") as f:
-                                f.write(resp.read())
+                            with urllib.request.urlopen(img_req, timeout=15) as resp:
+                                img_bytes = resp.read()
+                            
+                            with Image.open(io.BytesIO(img_bytes)) as pil_img:
+                                if pil_img.mode in ("RGBA", "P"):
+                                    pil_img = pil_img.convert("RGB")
+                                # Ограничиваем максимальную сторону до 1200px
+                                pil_img.thumbnail((1200, 1200), Image.Resampling.LANCZOS)
+                                pil_img.save(local_path, "WEBP", quality=80, method=6)
+                                
                             img_url = f"./images/{filename}"
                         except Exception as e:
-                            print(f"⚠️ Не удалось скачать фото для поста {msg_id}: {e}")
+                            print(f"⚠️ Ошибка сжатия фото для поста {msg_id}: {e}")
                             img_url = remote_img_url
                     else:
                         img_url = f"./images/{filename}"
@@ -178,7 +187,7 @@ def parse_channel():
             title = extract_title(raw_text)
             price = extract_price(raw_text)
             
-            # Нормализация хэштегов (заменяем 'к' на 'k' в бюджетах для единообразия)
+            # Нормализация хэштегов (заменяем 'к' на 'k' в бюджетах)
             normalized_tags = []
             for t in tags:
                 t_lower = t.lower()
@@ -221,7 +230,7 @@ def parse_channel():
         price = post.get("price", "По запросу")
         img_rel = post.get("imgUrl", "")
 
-        # Превращаем относительный путь картинки в абсолютный для робота Telegram
+        # Превращаем путь картинки в абсолютный для робота Telegram
         if img_rel.startswith("./"):
             og_img = f"{base_repo_url}/{img_rel[2:]}"
         elif img_rel.startswith("http"):
@@ -246,7 +255,7 @@ def parse_channel():
   <meta property="og:description" content="{price} • В наличии / под заказ в LifeRideLife">
   <meta property="og:image" content="{og_img}">
   <meta property="og:image:secure_url" content="{og_img}">
-  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:type" content="image/webp">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="800">
   <meta name="twitter:card" content="summary_large_image">
@@ -254,7 +263,7 @@ def parse_channel():
   <meta name="twitter:description" content="{price} • В наличии / под заказ в LifeRideLife">
   <meta name="twitter:image" content="{og_img}">
 
-  <!-- Мгновенный бесшовный переход через протокол tg:// -->
+  <!-- Мгновенный переход через протокол tg:// -->
   <script>
     window.location.href = "{tg_native_url}";
     setTimeout(function() {{
@@ -274,7 +283,7 @@ def parse_channel():
         with open(os.path.join("share", f"bike_{bike_id}.html"), "w", encoding="utf-8") as sf:
             sf.write(html_content)
 
-    print(f"🎉 ГОТОВО! Собрано {len(all_posts)} товаров и сгенерированы карточки шеринга в /share.")
+    print(f"🎉 ГОТОВО! Собрано {len(all_posts)} товаров и сжаты фото в WebP.")
 
 
 if __name__ == "__main__":
