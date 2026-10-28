@@ -27,7 +27,7 @@ function shareBike(bikeId, bikeTitle, bikePrice) {
   const cleanId = String(bikeId).replace(/\s+/g, '_');
   const shareLandingUrl = `https://jora71441-design.github.io/LifeRideLife/share/bike_${encodeURIComponent(cleanId)}.html`;
   
-  // Формируем текст так, чтобы ссылка шла строго в конце
+  // Формируем сообщение так, чтобы ссылка стояла строго внизу
   const fullMessage = `Зацени велосипед в LifeRideLife:\n${bikeTitle} (${bikePrice}) 🚲🔥\n\n${shareLandingUrl}`;
   const shareUrl = `https://t.me/share/url?text=${encodeURIComponent(fullMessage)}`;
 
@@ -156,7 +156,7 @@ async function loadProducts() {
         postsData = cachedData;
         renderCatalog();
         
-        // Если перешли по диплинку на байк — сразу скроллим к нему
+        // Если перешли по диплинку — сразу прыгаем к товару
         const startParam = tg?.initDataUnsafe?.start_param;
         if (startParam && startParam.startsWith('bike_')) {
           handleBikeDeepLink(startParam);
@@ -199,7 +199,7 @@ async function loadProducts() {
     }
   } catch (err) {
     console.error('Ошибка фонового обновления:', err);
-    // Если сети нет, но у пользователя был кэш — приложение продолжает работать без ошибок
+    // Если сети нет, но у пользователя был кэш — приложение продолжает работать штатно
     if (!postsData || postsData.length === 0) {
       if (catalogEl) {
         catalogEl.innerHTML = '<div class="status-msg">⚠️ Ошибка загрузки базы товаров. Проверьте соединение.</div>';
@@ -251,11 +251,10 @@ function renderCatalog() {
   }
 
   catalogEl.innerHTML = filtered.map(post => {
-    catalogEl.innerHTML = filtered.map(post => {
     const titleText = post.title || 'Товар LifeRideLife';
     const imgUrl = post.imgUrl || fallbackImg;
     
-    // В отзывах плашка скрыта полностью, в остальных товарах — аккуратное «В наличии»
+    // В отзывах плашка не нужна, в остальных карточках — лаконичное «В наличии»
     const badgeHtml = (currentCategory === 'reviews') 
       ? '' 
       : '<div class="badge">🟢 В наличии</div>';
@@ -275,6 +274,11 @@ function renderCatalog() {
           <div class="card-footer">
             <div class="card-price">${post.price || 'По запросу'}</div>
             ${badgeHtml}
+          </div>
+          <div class="card-actions" style="display: flex; gap: 4px; align-items: center; margin-top: 8px;">
+            <a href="${post.postUrl || 'https://t.me/LifeRideLife'}" target="_blank" class="btn btn-secondary" style="flex: 1; text-align: center; padding: 8px 2px; font-size: 11px;">📖 Пост</a>
+            <a href="https://t.me/Piti4?text=${encodeURIComponent('Здравствуйте! Интересует: ' + titleText + '\n' + (post.postUrl || ''))}" target="_blank" class="btn btn-primary" style="flex: 1; text-align: center; padding: 8px 2px; font-size: 11px;">💬 Обсудить</a>
+            <button onclick="shareBike('${post.id || post.title}', '${titleText.replace(/'/g, "\\'")}', '${post.price || 'По запросу'}')" class="btn" style="flex: 1; padding: 8px 2px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #fff; cursor: pointer; font-size: 11px; text-align: center;">🔗 Отправить</button>
           </div>
         </div>
       </div>
