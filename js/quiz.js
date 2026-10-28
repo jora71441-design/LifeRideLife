@@ -16,17 +16,11 @@
     budget: '150_250k'
   };
 
-  // Расчет параметров геометрии и подбор тегов
+  // Расчет параметров геометрии и строго ОДНОГО класса байка
   function calculateFit() {
     const h = parseInt(quizState.height, 10) || 175;
-    const ins = quizState.knowInseam && quizState.inseam ? parseInt(quizState.inseam, 10) : Math.round(h * 0.465);
     
-    let factor = 0.65;
-    if (quizState.posture === 'race') factor = 0.665;
-    if (quizState.surface === 'gravel' && quizState.posture === 'comfort_endurance') factor = 0.63;
-
-    const ett = Math.round(ins * factor * 10);
-    
+    // Определение размера рамы по росту
     let sizeTag = '#170_180cm';
     let sizeLabel = 'M (54)';
     if (h < 160) { sizeTag = '#150_160cm'; sizeLabel = 'XXS/XS (47–49)'; }
@@ -35,37 +29,56 @@
     else if (h < 190) { sizeTag = '#180_190cm'; sizeLabel = 'L/XL (56–58)'; }
     else { sizeTag = '#190_200cm'; sizeLabel = 'XL/XXL (58–61)'; }
 
+    // Логика подбора СТРОГО одного класса рамы
     let recommendedClass = 'Endurance Road';
-    let classTags = ['#эндуранс'];
+    let classTag = '#эндуранс';
 
-    if (quizState.surface === 'road') {
-      if (quizState.posture === 'race') {
-        recommendedClass = 'Aero / Race Road';
-        classTags = ['#шоссер'];
+    if (quizState.surface === 'gravel') {
+      // Преимущественно бездорожье -> строго гравел
+      recommendedClass = quizState.tasks.bikepacking ? 'Adventure / Touring Gravel' : 'Gravel';
+      classTag = '#гравел';
+    } else if (quizState.surface === 'mix') {
+      // 50/50 микс: если спорт-эндюранс с акцентом на скорость по шоссе -> гоночный эндуранс, иначе гравел
+      if (quizState.posture === 'sport_endurance' && quizState.tasks.fasterAsphalt) {
+        recommendedClass = 'Гоночный эндюранс / Fast All-Road';
+        classTag = '#гоночныйэндуранс';
       } else if (quizState.posture === 'sport_endurance') {
-        recommendedClass = 'Performance All-Road / Спорт-эндюранс';
-        classTags = ['#гоночныйэндуранс'];
-      } else {
-        recommendedClass = 'Comfort Endurance Road';
-        classTags = ['#эндуранс'];
-      }
-    } else if (quizState.surface === 'mix' || quizState.surface === 'road_pref') {
-      if (quizState.posture === 'sport_endurance') {
-        recommendedClass = 'Fast Gravel / Спорт-эндюранс';
-        classTags = ['#гравел', '#гоночныйэндуранс'];
+        recommendedClass = 'Fast Gravel / Спорт-гравел';
+        classTag = '#гравел';
       } else if (quizState.posture === 'race') {
         recommendedClass = 'Race Gravel';
-        classTags = ['#гравел', '#шоссер'];
+        classTag = '#гравел';
       } else {
         recommendedClass = 'Comfort Gravel / All-Road';
-        classTags = ['#гравел', '#эндуранс'];
+        classTag = '#гравел';
+      }
+    } else if (quizState.surface === 'road_pref') {
+      // Преимущественно асфальт (70/30)
+      if (quizState.posture === 'race') {
+        recommendedClass = 'Aero / Race Road';
+        classTag = '#шоссер';
+      } else if (quizState.posture === 'sport_endurance') {
+        recommendedClass = 'Спорт-эндюранс / All-Road';
+        classTag = '#гоночныйэндуранс';
+      } else {
+        recommendedClass = 'Endurance Road';
+        classTag = '#эндуранс';
       }
     } else {
-      recommendedClass = quizState.tasks.bikepacking ? 'Adventure / Touring Gravel' : 'Gravel';
-      classTags = ['#гравел'];
+      // 100% Шоссе
+      if (quizState.posture === 'race') {
+        recommendedClass = 'Aero / Race Road';
+        classTag = '#шоссер';
+      } else if (quizState.posture === 'sport_endurance') {
+        recommendedClass = 'Спорт-эндюранс';
+        classTag = '#гоночныйэндуранс';
+      } else {
+        recommendedClass = 'Endurance Road';
+        classTag = '#эндуранс';
+      }
     }
 
-    return { ett, ins, sizeTag, sizeLabel, recommendedClass, classTags };
+    return { sizeTag, sizeLabel, recommendedClass, classTag };
   }
 
   // Создание модального окна в DOM
@@ -74,6 +87,7 @@
 
     const modal = document.createElement('div');
     modal.id = 'lrl-quiz-modal';
+    modal.className = 'quiz-modal-backdrop';
     modal.style.cssText = `
       display: none; position: fixed; inset: 0; z-index: 9999;
       background: rgba(10, 15, 20, 0.85); backdrop-filter: blur(8px);
@@ -210,23 +224,27 @@
       if (quizState.budget === '250_400k') budgetText = '250 000 – 400 000 ₽';
       if (quizState.budget === 'over_400k') budgetText = 'от 400 000 ₽';
 
-      const fullSummary = `Резюме подбора LifeRideLife:\n\n• Рост: ${quizState.height} см (Инсим: ~${fit.ins} см, ETT ~${fit.ett} мм, размер ${fit.sizeLabel})\n• Покрытие: ${surfaceText}\n• Посадка: ${postureText}\n• Задачи: ${tasksStr}\n• Рекомендованный класс: ${fit.recommendedClass}\n• Бюджет: ${budgetText}`;
+      const fullSummary = `Резюме подбора LifeRideLife:\n\n• Рост: ${quizState.height} см (размер рамы: ${fit.sizeLabel})\n• Покрытие: ${surfaceText}\n• Посадка: ${postureText}\n• Задачи: ${tasksStr}\n• Рекомендованный класс: ${fit.recommendedClass}\n• Бюджет: ${budgetText}`;
 
       container.innerHTML = `
         <div style="background: rgba(36, 161, 222, 0.1); border: 1px solid rgba(36, 161, 222, 0.3); border-radius: 12px; padding: 14px; margin-bottom: 16px; font-size: 13px; line-height: 1.5;">
           <div style="font-weight: 700; color: #24a1de; margin-bottom: 8px; font-size: 14px;">📋 Твое персональное резюме:</div>
-          <div>📏 <strong>Размер рамы:</strong> ${fit.sizeLabel} (ETT ~${fit.ett} мм)</div>
+          <div>📏 <strong>Размер рамы:</strong> ${fit.sizeLabel}</div>
           <div>🚲 <strong>Класс:</strong> ${fit.recommendedClass}</div>
           <div>💰 <strong>Бюджет:</strong> ${budgetText}</div>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          <button onclick="quizApplyFilters('${fit.sizeTag}', '${fit.classTags.join(',')}')" style="padding: 12px; border-radius: 10px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-weight: 600; cursor: pointer;">
+          <button onclick="quizApplyFilters('${fit.sizeTag}', '${fit.classTag}')" style="padding: 12px; border-radius: 10px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-weight: 600; cursor: pointer;">
             🔍 Показать подходящие в наличии
           </button>
           
           <button onclick="quizSendToTg('${encodeURIComponent(fullSummary)}')" style="padding: 12px; border-radius: 10px; background: #24a1de; color: #fff; font-weight: 700; border: none; cursor: pointer; text-align: center;">
             📩 Отправить запрос в Telegram
+          </button>
+
+          <button onclick="quizPrev()" style="padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #aaa; cursor: pointer; font-size: 12px; text-align: center; margin-top: 4px;">
+            ⬅️ Назад (изменить параметры)
           </button>
         </div>
       `;
@@ -322,19 +340,21 @@
     renderStep();
   };
 
-  window.quizApplyFilters = function (sizeTag, classTagsStr) {
+  window.quizApplyFilters = function (sizeTag, singleClassTag) {
     window.closeQuiz();
     if (typeof window.setCategory === 'function') {
       window.setCategory('bikes');
     }
     
+    // Сбрасываем старые и выставляем строго 2 фильтра: [Размер, Класс]
     if (window.selectedTags) {
       window.selectedTags.clear();
       document.querySelectorAll('.tag-pill').forEach(p => p.classList.remove('active'));
 
-      const tagsToActivate = [sizeTag, ...classTagsStr.split(',')].filter(Boolean);
+      const tagsToActivate = [sizeTag, singleClassTag].filter(Boolean);
       tagsToActivate.forEach(t => window.selectedTags.add(t));
 
+      // Подсвечиваем активные пилюли в интерфейсе каталога
       document.querySelectorAll('.tag-pill').forEach(pill => {
         const onclickAttr = pill.getAttribute('onclick') || '';
         if (tagsToActivate.some(t => onclickAttr.includes(`'${t}'`))) {
