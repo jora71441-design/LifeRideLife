@@ -251,8 +251,14 @@ function renderCatalog() {
   }
 
   catalogEl.innerHTML = filtered.map(post => {
+    catalogEl.innerHTML = filtered.map(post => {
     const titleText = post.title || 'Товар LifeRideLife';
     const imgUrl = post.imgUrl || fallbackImg;
+    
+    // В отзывах плашка скрыта полностью, в остальных товарах — аккуратное «В наличии»
+    const badgeHtml = (currentCategory === 'reviews') 
+      ? '' 
+      : '<div class="badge">🟢 В наличии</div>';
 
     return `
       <div class="card" id="bike-${post.id}">
@@ -268,12 +274,7 @@ function renderCatalog() {
           <div class="card-tags">${post.originalTagsText || ''}</div>
           <div class="card-footer">
             <div class="card-price">${post.price || 'По запросу'}</div>
-            <div class="badge">🟢 в наличии / под заказ</div>
-          </div>
-          <div class="card-actions" style="display: flex; gap: 4px; align-items: center; margin-top: 8px;">
-            <a href="${post.postUrl || 'https://t.me/LifeRideLife'}" target="_blank" class="btn btn-secondary" style="flex: 1; text-align: center; padding: 8px 2px; font-size: 11px;">📖 Пост</a>
-            <a href="https://t.me/Piti4?text=${encodeURIComponent('Здравствуйте! Интересует: ' + titleText + '\n' + (post.postUrl || ''))}" target="_blank" class="btn btn-primary" style="flex: 1; text-align: center; padding: 8px 2px; font-size: 11px;">💬 Обсудить</a>
-            <button onclick="shareBike('${post.id || post.title}', '${titleText.replace(/'/g, "\\'")}', '${post.price || 'По запросу'}')" class="btn" style="flex: 1; padding: 8px 2px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #fff; cursor: pointer; font-size: 11px; text-align: center;">🔗 Отправить</button>
+            ${badgeHtml}
           </div>
         </div>
       </div>
