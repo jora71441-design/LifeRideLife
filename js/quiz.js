@@ -6,7 +6,7 @@
     height: 175,
     knowInseam: false,
     inseam: 81,
-    surface: 'mix', // 'road', 'road_pref', 'mix', 'gravel'
+    surface: 'asphalt_gravel', // 'road', 'asphalt_gravel', 'gravel_asphalt', 'gravel'
     posture: 'sport_endurance', // 'comfort_endurance', 'sport_endurance', 'race'
     tasks: {
       longDistance: false,
@@ -34,26 +34,23 @@
     let classTag = '#эндуранс';
 
     if (quizState.surface === 'gravel') {
-      // Преимущественно бездорожье -> строго гравел
+      // В основном гравий 70%+ -> гравел
       recommendedClass = quizState.tasks.bikepacking ? 'Adventure / Touring Gravel' : 'Gravel';
       classTag = '#гравел';
-    } else if (quizState.surface === 'mix') {
-      // 50/50 микс: если спорт-эндюранс с акцентом на скорость по шоссе -> гоночный эндуранс, иначе гравел
-      if (quizState.posture === 'sport_endurance' && quizState.tasks.fasterAsphalt) {
-        recommendedClass = 'Гоночный эндюранс / Fast All-Road';
-        classTag = '#гоночныйэндуранс';
-      } else if (quizState.posture === 'sport_endurance') {
+    } else if (quizState.surface === 'gravel_asphalt') {
+      // Гравий/Асфальт 70/30% -> упор в гравий
+      if (quizState.posture === 'sport_endurance') {
         recommendedClass = 'Fast Gravel / Спорт-гравел';
         classTag = '#гравел';
       } else if (quizState.posture === 'race') {
         recommendedClass = 'Race Gravel';
         classTag = '#гравел';
       } else {
-        recommendedClass = 'Comfort Gravel / All-Road';
+        recommendedClass = 'Comfort Gravel';
         classTag = '#гравел';
       }
-    } else if (quizState.surface === 'road_pref') {
-      // Преимущественно асфальт (70/30)
+    } else if (quizState.surface === 'asphalt_gravel') {
+      // Асфальт/Гравий 70/30% -> упор в асфальт и плотные покрытия
       if (quizState.posture === 'race') {
         recommendedClass = 'Aero / Race Road';
         classTag = '#шоссер';
@@ -61,11 +58,11 @@
         recommendedClass = 'Спорт-эндюранс / All-Road';
         classTag = '#гоночныйэндуранс';
       } else {
-        recommendedClass = 'Endurance Road';
+        recommendedClass = 'Endurance Road / All-Road';
         classTag = '#эндуранс';
       }
     } else {
-      // 100% Шоссе
+      // Шоссе/асфальт 100%
       if (quizState.posture === 'race') {
         recommendedClass = 'Aero / Race Road';
         classTag = '#шоссер';
@@ -149,10 +146,10 @@
         <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Шаг 2 из 4: Где планируешь кататься?</div>
         
         <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px;">
-          ${renderRadio('surface', 'road', '🛣 Только шоссе и асфальт (100%)', 'Гладкий асфальт, быстрый накат, чистая скорость.')}
-          ${renderRadio('surface', 'road_pref', '🏙 Асфальт + парки (70% / 30%)', 'Шоссе с выездами на набережные, брусчатку и укатанные тропинки.')}
-          ${renderRadio('surface', 'mix', '🌲 Разнообразные покрытия 50/50', 'Асфальт, грунтовки, грейдер, лесные дороги и гравий.')}
-          ${renderRadio('surface', 'gravel', '🚵‍♂️ Преимущественно бездорожье (70%+)', 'Гравий, каменистые тропы, сложный грунт, лесные маршруты.')}
+          ${renderRadio('surface', 'road', '🛣 Шоссе / асфальт 100%', 'Гладкий асфальт, чистая скорость, быстрый шоссейный накат.')}
+          ${renderRadio('surface', 'asphalt_gravel', '🏙 Асфальт / гравий 70/30%', 'Преимущественно шоссе с периодическими съездами на грунты и парковые дорожки.')}
+          ${renderRadio('surface', 'gravel_asphalt', '🌲 Гравий / асфальт 70/30%', 'В основном гравийные и грунтовые дороги с перегонами по асфальту.')}
+          ${renderRadio('surface', 'gravel', '🚵‍♂️ В основном гравий 70%+', 'Гравий, каменистые тропы, сложный рельеф и лесные маршруты.')}
         </div>
 
         <div style="display: flex; gap: 8px;">
@@ -203,10 +200,10 @@
     } else if (quizState.step === 5) {
       const fit = calculateFit();
       
-      let surfaceText = '50% асфальт / 50% гравий';
-      if (quizState.surface === 'road') surfaceText = '100% асфальт и шоссе';
-      if (quizState.surface === 'road_pref') surfaceText = '70% асфальт / 30% парки и тропы';
-      if (quizState.surface === 'gravel') surfaceText = '70%+ гравий и бездорожье';
+      let surfaceText = 'Асфальт / гравий (70% / 30%)';
+      if (quizState.surface === 'road') surfaceText = 'Шоссе / асфальт 100%';
+      if (quizState.surface === 'gravel_asphalt') surfaceText = 'Гравий / асфальт (70% / 30%)';
+      if (quizState.surface === 'gravel') surfaceText = 'В основном гравий (70%+)';
 
       let postureText = 'Спорт-эндюранс (комфортно для спины, но динамично)';
       if (quizState.posture === 'comfort_endurance') postureText = 'Классический эндюранс (максимальный комфорт)';
