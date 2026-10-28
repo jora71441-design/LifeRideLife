@@ -29,6 +29,11 @@
 
   <div class="banner" onclick="openWinspaceCatalog()">🛡 Winspace | Официальный заказ</div>
 
+  <!-- Кнопка экспресс-подбора байка -->
+  <button onclick="openQuiz()" style="width: 100%; margin: 8px 0 12px; padding: 12px 16px; border-radius: 12px; background: linear-gradient(135deg, #24a1de, #0077b5); color: #fff; font-weight: 700; font-size: 14px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(36, 161, 222, 0.35);">
+    🎯 Подобрать байк под свои задачи
+  </button>
+
   <!-- Главные категории -->
   <div class="tabs">
     <button class="tab-btn active" onclick="setCategory('bikes')">🚲 Велосипеды</button>
@@ -228,10 +233,11 @@
     </div>
   </div>
 
-  <!-- Модульные скрипты приложения -->
+    <!-- Модульные скрипты приложения -->
   <script src="winspaceCatalog.js"></script>
   <script src="js/calculator.js"></script>
   <script src="js/winspace.js"></script>
+  <script src="js/quiz.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
