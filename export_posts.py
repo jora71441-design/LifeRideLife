@@ -229,7 +229,7 @@ def parse_channel():
         else:
             og_img = f"{base_repo_url}/{img_rel}"
 
-                target_app_url = f"https://t.me/liferidelife_bot?startapp=bike_{bike_id}"
+        target_app_url = f"https://t.me/liferidelife_bot?startapp=bike_{bike_id}"
         tg_native_url = f"tg://resolve?domain=liferidelife_bot&startapp=bike_{bike_id}"
 
         html_content = f"""<!DOCTYPE html>
