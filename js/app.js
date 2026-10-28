@@ -3,9 +3,7 @@
 let postsData = [];
 let currentCategory = 'bikes';
 let selectedTags = new Set();
-window.selectedTags = selectedTags;
 let currentBikeType = 'road_race';
-window.currentBikeType = currentBikeType;
 let hasHandledDeepLink = false;
 
 const bikeFactors = {
@@ -16,8 +14,12 @@ const bikeFactors = {
 
 const tg = window.Telegram?.WebApp;
 if (tg) {
-  tg.ready();
-  tg.expand();
+  try {
+    tg.ready();
+    tg.expand();
+  } catch (e) {
+    console.warn('Telegram WebApp init error:', e);
+  }
 }
 
 const fallbackImg = 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600';
@@ -74,7 +76,9 @@ function handleBikeDeepLink(startParam) {
 // Внешние ссылки с Яндекс Метрикой
 function openExternalLink(url) {
   if (window.ym) {
-    ym(112661781, 'reachGoal', 'click_fititi');
+    try {
+      window.ym(112661781, 'reachGoal', 'click_fititi');
+    } catch (e) {}
   }
   if (window.Telegram?.WebApp?.openLink) {
     window.Telegram.WebApp.openLink(url);
@@ -88,8 +92,8 @@ function setCategory(cat) {
   currentCategory = cat;
 
   if (cat === 'winspace') {
-    if (typeof openWinspaceCatalog === 'function') {
-      openWinspaceCatalog('complete', 'all');
+    if (typeof window.openWinspaceCatalog === 'function') {
+      window.openWinspaceCatalog('complete', 'all');
     } else {
       console.error('Функция openWinspaceCatalog не найдена!');
     }
@@ -119,7 +123,7 @@ function setCategory(cat) {
   if (cat === 'guides') {
     if (calcDiv) {
       calcDiv.style.display = 'block';
-      if (typeof updateCalc === 'function') updateCalc();
+      if (typeof window.updateCalc === 'function') window.updateCalc();
     }
     if (fititiDiv) fititiDiv.style.display = 'block';
   } else {
@@ -174,12 +178,17 @@ async function loadProducts() {
     
     const freshData = await response.json();
     const freshRaw = JSON.stringify(freshData);
-    const cachedRaw = localStorage.getItem(CACHE_KEY);
+    let cachedRaw = null;
+    try {
+      cachedRaw = localStorage.getItem(CACHE_KEY);
+    } catch (e) {}
 
     // Если данные изменились или кэша ещё не было — обновляем память и интерфейс
-    if (freshRaw !== cachedRaw) {
+    if (freshRaw !== cachedRaw || !postsData || postsData.length === 0) {
       postsData = freshData;
-      localStorage.setItem(CACHE_KEY, freshRaw);
+      try {
+        localStorage.setItem(CACHE_KEY, freshRaw);
+      } catch (e) {}
       
       const startParam = tg?.initDataUnsafe?.start_param;
       if (startParam === 'calculator') {
@@ -199,7 +208,6 @@ async function loadProducts() {
     }
   } catch (err) {
     console.error('Ошибка фонового обновления:', err);
-    // Если сети нет, но у пользователя был кэш — приложение продолжает работать штатно
     if (!postsData || postsData.length === 0) {
       if (catalogEl) {
         catalogEl.innerHTML = '<div class="status-msg">⚠️ Ошибка загрузки базы товаров. Проверьте соединение.</div>';
@@ -286,7 +294,21 @@ function renderCatalog() {
   }).join('');
 }
 
-// Запуск при загрузке DOM
-document.addEventListener("DOMContentLoaded", () => {
+// ЭКСПОРТ В ГЛОБАЛЬНУЮ ОБЛАСТЬ ВИДИМОСТИ WINDOW ДЛЯ HTML ONCLICK
+window.postsData = postsData;
+window.selectedTags = selectedTags;
+window.currentBikeType = currentBikeType;
+window.shareBike = shareBike;
+window.handleBikeDeepLink = handleBikeDeepLink;
+window.openExternalLink = openExternalLink;
+window.setCategory = setCategory;
+window.toggleTag = toggleTag;
+window.loadProducts = loadProducts;
+window.renderCatalog = renderCatalog;
+
+// Надежный запуск: если DOM уже готов — стартуем сразу, если нет — ждем DOMContentLoaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', loadProducts);
+} else {
   loadProducts();
-});
+}
