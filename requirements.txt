@@ -4,5 +4,4 @@ requests
 telethon
 beautifulsoup4
 lxml
-
-
+Pillow
