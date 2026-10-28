@@ -59,13 +59,39 @@ def extract_price(text):
 
 def determine_category(tags_lower, raw_text_lower):
     """Автоматическое определение категории поста"""
-    if any(t in tags_lower for t in ["#отзыв", "#отзывы", "#покупка"]) or re.search(r"\bотзыв(?:ы|а|е|ом|ов)?\b", raw_text_lower):
+    if any(
+            t in tags_lower for t in [
+                "#отзыв",
+                "#отзывы",
+                "#покупка"]) or re.search(
+        r"\bотзыв(?:ы|а|е|ом|ов)?\b",
+            raw_text_lower):
         return "reviews"
-    if any(t in tags_lower for t in ["#гайд", "#гайды", "#полезно", "#ростовка", "#обслуживание"]) or re.search(r"\bгайд(?:ы|а|е|ом|ов)?\b", raw_text_lower):
+    if any(
+            t in tags_lower for t in [
+                "#гайд",
+                "#гайды",
+                "#полезно",
+                "#ростовка",
+                "#обслуживание"]) or re.search(
+        r"\bгайд(?:ы|а|е|ом|ов)?\b",
+            raw_text_lower):
         return "guides"
-    if any(t in tags_lower for t in ["#фреймсет", "#kit", "#upgrade", "#комплект"]):
+    if any(
+        t in tags_lower for t in [
+            "#фреймсет",
+            "#kit",
+            "#upgrade",
+            "#комплект"]):
         return "upgrade_kits"
-    if any(t in tags_lower for t in ["#запчасти", "#компоненты", "#групсет", "#колеса", "#руль", "#седло"]):
+    if any(
+        t in tags_lower for t in [
+            "#запчасти",
+            "#компоненты",
+            "#групсет",
+            "#колеса",
+            "#руль",
+            "#седло"]):
         return "components"
     return "bikes"
 
@@ -76,9 +102,10 @@ def extract_title(text):
     for line in lines:
         clean_line = re.sub(r"#[^\s]+", "", line).strip()
         clean_line_no_emoji = re.sub(r"[^\w\s\d-]", "", clean_line).strip()
-        
+
         # Пропускаем пустые строки, чисто эмодзи и статусы "ПРОДАН"
-        if clean_line_no_emoji and not re.match(r"^(продан|продано)$", clean_line_no_emoji.lower()):
+        if clean_line_no_emoji and not re.match(
+                r"^(продан|продано)$", clean_line_no_emoji.lower()):
             return clean_line
     return "Товар LifeRideLife"
 
@@ -99,8 +126,8 @@ def parse_channel():
             url += f"?before={before_id}"
 
         req = urllib.request.Request(
-            url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-        )
+            url, headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
 
         try:
             html = urllib.request.urlopen(req).read().decode("utf-8")
@@ -144,7 +171,8 @@ def parse_channel():
                 continue
 
             # Исключаем проданные позиции
-            if any(t.lower() in ["#продано", "#продан"] for t in tags) or "продан" in raw_text.lower()[:40]:
+            if any(t.lower() in ["#продано", "#продан"]
+                   for t in tags) or "продан" in raw_text.lower()[:40]:
                 continue
 
             photo_wrap = msg.find(
@@ -159,34 +187,36 @@ def parse_channel():
                     remote_img_url = match[1]
                     filename = f"bike_{msg_id}.webp"
                     local_path = os.path.join("images", filename)
-                    
+
                     # Скачиваем и жмём в WebP только если файла ещё нет
                     if not os.path.exists(local_path):
                         try:
                             img_req = urllib.request.Request(
-                                remote_img_url,
-                                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-                            )
+                                remote_img_url, headers={
+                                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
                             with urllib.request.urlopen(img_req, timeout=15) as resp:
                                 img_bytes = resp.read()
-                            
+
                             with Image.open(io.BytesIO(img_bytes)) as pil_img:
                                 if pil_img.mode in ("RGBA", "P"):
                                     pil_img = pil_img.convert("RGB")
                                 # Ограничиваем максимальную сторону до 1200px
-                                pil_img.thumbnail((1200, 1200), Image.Resampling.LANCZOS)
-                                pil_img.save(local_path, "WEBP", quality=80, method=6)
-                                
+                                pil_img.thumbnail(
+                                    (1200, 1200), Image.Resampling.LANCZOS)
+                                pil_img.save(
+                                    local_path, "WEBP", quality=80, method=6)
+
                             img_url = f"./images/{filename}"
                         except Exception as e:
-                            print(f"⚠️ Ошибка сжатия фото для поста {msg_id}: {e}")
+                            print(
+                                f"⚠️ Ошибка сжатия фото для поста {msg_id}: {e}")
                             img_url = remote_img_url
                     else:
                         img_url = f"./images/{filename}"
 
             title = extract_title(raw_text)
             price = extract_price(raw_text)
-            
+
             # Нормализация хэштегов (заменяем 'к' на 'k' в бюджетах)
             normalized_tags = []
             for t in tags:
@@ -226,7 +256,11 @@ def parse_channel():
 
     for post in all_posts:
         bike_id = post["id"]
-        title = post.get("title", "Велосипед LifeRideLife").replace('"', '&quot;')
+        title = post.get(
+            "title",
+            "Велосипед LifeRideLife").replace(
+            '"',
+            '&quot;')
         price = post.get("price", "По запросу")
         img_rel = post.get("imgUrl", "")
 
@@ -247,7 +281,7 @@ def parse_channel():
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{title} — {price}</title>
-  
+
   <!-- Open Graph / Telegram Preview Meta -->
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="LifeRideLife">
