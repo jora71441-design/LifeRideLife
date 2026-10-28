@@ -262,10 +262,25 @@ function renderCatalog() {
     const titleText = post.title || 'Товар LifeRideLife';
     const imgUrl = post.imgUrl || fallbackImg;
     
-    // В отзывах плашка не нужна, в остальных карточках — лаконичное «В наличии»
-    const badgeHtml = (currentCategory === 'reviews') 
-      ? '' 
-      : '<div class="badge">🟢 В наличии</div>';
+    // В отзывах убираем плашку наличия и надпись "По запросу"
+    let footerHtml = '';
+    if (currentCategory === 'reviews') {
+      const hasRealPrice = post.price && post.price !== 'По запросу';
+      if (hasRealPrice) {
+        footerHtml = `
+          <div class="card-footer">
+            <div class="card-price">${post.price}</div>
+          </div>
+        `;
+      }
+    } else {
+      footerHtml = `
+        <div class="card-footer">
+          <div class="card-price">${post.price || 'По запросу'}</div>
+          <div class="badge">🟢 В наличии</div>
+        </div>
+      `;
+    }
 
     return `
       <div class="card" id="bike-${post.id}">
@@ -279,10 +294,7 @@ function renderCatalog() {
         <div class="card-body">
           <div class="card-title">${titleText}</div>
           <div class="card-tags">${post.originalTagsText || ''}</div>
-          <div class="card-footer">
-            <div class="card-price">${post.price || 'По запросу'}</div>
-            ${badgeHtml}
-          </div>
+          ${footerHtml}
           <div class="card-actions" style="display: flex; gap: 4px; align-items: center; margin-top: 8px;">
             <a href="${post.postUrl || 'https://t.me/LifeRideLife'}" target="_blank" class="btn btn-secondary" style="flex: 1; text-align: center; padding: 8px 2px; font-size: 11px;">📖 Пост</a>
             <a href="https://t.me/Piti4?text=${encodeURIComponent('Здравствуйте! Интересует: ' + titleText + '\n' + (post.postUrl || ''))}" target="_blank" class="btn btn-primary" style="flex: 1; text-align: center; padding: 8px 2px; font-size: 11px;">💬 Обсудить</a>
