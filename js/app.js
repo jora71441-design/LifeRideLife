@@ -142,36 +142,68 @@ function toggleTag(el, tag) {
   renderCatalog();
 }
 
-// Загрузка products.json
+// Загрузка products.json с турбо-кэшированием (Stale-While-Revalidate)
 async function loadProducts() {
   const catalogEl = document.getElementById('catalog');
+  const CACHE_KEY = 'lrl_catalog_cache_v1';
+  
+  // 1. МГНОВЕННЫЙ СТАРТ: если есть кэш — отрисовываем за 0 мс без спиннера
+  try {
+    const cachedRaw = localStorage.getItem(CACHE_KEY);
+    if (cachedRaw) {
+      const cachedData = JSON.parse(cachedRaw);
+      if (Array.isArray(cachedData) && cachedData.length > 0) {
+        postsData = cachedData;
+        renderCatalog();
+        
+        // Если перешли по диплинку на байк — сразу скроллим к нему
+        const startParam = tg?.initDataUnsafe?.start_param;
+        if (startParam && startParam.startsWith('bike_')) {
+          handleBikeDeepLink(startParam);
+        }
+      }
+    }
+  } catch (cacheErr) {
+    console.warn('Ошибка чтения кэша:', cacheErr);
+  }
+
+  // 2. ФОНОВОЕ ОБНОВЛЕНИЕ: тихо запрашиваем свежие данные из сети
   try {
     const response = await fetch('./products.json?v=' + Date.now());
     if (!response.ok) throw new Error('products.json not found');
     
-    postsData = await response.json();
-    
-    const startParam = tg?.initDataUnsafe?.start_param;
-    if (startParam === 'calculator') {
-      setCategory('guides');
-      setTimeout(() => {
-        const calcEl = document.getElementById('size-calculator');
-        if (calcEl) {
-          calcEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 300);
-    } else if (startParam && startParam.startsWith('bike_')) {
-      renderCatalog();
-      handleBikeDeepLink(startParam);
-    } else if (startParam && ['bikes', 'upgrade_kits', 'components', 'guides', 'reviews', 'winspace'].includes(startParam)) {
-      setCategory(startParam);
-    } else {
-      renderCatalog();
+    const freshData = await response.json();
+    const freshRaw = JSON.stringify(freshData);
+    const cachedRaw = localStorage.getItem(CACHE_KEY);
+
+    // Если данные изменились или кэша ещё не было — обновляем память и интерфейс
+    if (freshRaw !== cachedRaw) {
+      postsData = freshData;
+      localStorage.setItem(CACHE_KEY, freshRaw);
+      
+      const startParam = tg?.initDataUnsafe?.start_param;
+      if (startParam === 'calculator') {
+        setCategory('guides');
+        setTimeout(() => {
+          const calcEl = document.getElementById('size-calculator');
+          if (calcEl) calcEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
+      } else if (startParam && startParam.startsWith('bike_')) {
+        renderCatalog();
+        handleBikeDeepLink(startParam);
+      } else if (startParam && ['bikes', 'upgrade_kits', 'components', 'guides', 'reviews', 'winspace'].includes(startParam)) {
+        setCategory(startParam);
+      } else {
+        renderCatalog();
+      }
     }
   } catch (err) {
-    console.error(err);
-    if (catalogEl) {
-      catalogEl.innerHTML = '<div class="status-msg">⚠️ Ошибка загрузки базы товаров. Проверьте наличие products.json.</div>';
+    console.error('Ошибка фонового обновления:', err);
+    // Если сети нет, но у пользователя был кэш — приложение продолжает работать без ошибок
+    if (!postsData || postsData.length === 0) {
+      if (catalogEl) {
+        catalogEl.innerHTML = '<div class="status-msg">⚠️ Ошибка загрузки базы товаров. Проверьте соединение.</div>';
+      }
     }
   }
 }
