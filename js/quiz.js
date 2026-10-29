@@ -16,11 +16,11 @@
     budget: '150_250k'
   };
 
-  // Расчет параметров геометрии и строго ОДНОГО класса байка
+  // Расчет параметров геометрии, класса и бюджета
   function calculateFit() {
     const h = parseInt(quizState.height, 10) || 175;
     
-    // Определение размера рамы по росту
+    // 1. Определение размера рамы по росту
     let sizeTag = '#170_180cm';
     let sizeLabel = 'M (54)';
     if (h < 160) { sizeTag = '#150_160cm'; sizeLabel = 'XXS/XS (47–49)'; }
@@ -29,16 +29,14 @@
     else if (h < 190) { sizeTag = '#180_190cm'; sizeLabel = 'L/XL (56–58)'; }
     else { sizeTag = '#190_200cm'; sizeLabel = 'XL/XXL (58–61)'; }
 
-    // Логика подбора СТРОГО одного класса рамы
+    // 2. Логика подбора СТРОГО одного класса рамы
     let recommendedClass = 'Endurance Road';
     let classTag = '#эндуранс';
 
     if (quizState.surface === 'gravel') {
-      // В основном гравий 70%+ -> гравел
       recommendedClass = quizState.tasks.bikepacking ? 'Adventure / Touring Gravel' : 'Gravel';
       classTag = '#гравел';
     } else if (quizState.surface === 'gravel_asphalt') {
-      // Гравий/Асфальт 70/30% -> упор в гравий
       if (quizState.posture === 'sport_endurance') {
         recommendedClass = 'Fast Gravel / Спорт-гравел';
         classTag = '#гравел';
@@ -50,7 +48,6 @@
         classTag = '#гравел';
       }
     } else if (quizState.surface === 'asphalt_gravel') {
-      // Асфальт/Гравий 70/30% -> упор в асфальт и плотные покрытия
       if (quizState.posture === 'race') {
         recommendedClass = 'Aero / Race Road';
         classTag = '#шоссер';
@@ -62,7 +59,6 @@
         classTag = '#эндуранс';
       }
     } else {
-      // Шоссе/асфальт 100%
       if (quizState.posture === 'race') {
         recommendedClass = 'Aero / Race Road';
         classTag = '#шоссер';
@@ -75,7 +71,14 @@
       }
     }
 
-    return { sizeTag, sizeLabel, recommendedClass, classTag };
+    // 3. Сопоставление тега бюджета каталога
+    let budgetTag = '#150_250к';
+    if (quizState.budget === 'under_150k') budgetTag = '#0_150к';
+    else if (quizState.budget === 'under_200k' || quizState.budget === '150_250k') budgetTag = '#150_250к';
+    else if (quizState.budget === '250_400k') budgetTag = '#250_400к';
+    else if (quizState.budget === 'over_400k') budgetTag = '#400_600к';
+
+    return { sizeTag, sizeLabel, recommendedClass, classTag, budgetTag };
   }
 
   // Создание модального окна в DOM
@@ -131,7 +134,7 @@
         <div style="margin-bottom: 16px; background: rgba(255,255,255,0.04); padding: 12px; border-radius: 10px;">
           <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
             <input type="checkbox" ${quizState.knowInseam ? 'checked' : ''} onchange="quizToggleInseam(this.checked)" style="accent-color: #24a1de;">
-            <span>Знаю длину ноги по шагу (инсим)</span>
+            <span>Знаю внутреннюю длину ноги (инсим)</span>
           </label>
           <div id="quiz-inseam-wrap" style="display: ${quizState.knowInseam ? 'block' : 'none'}; margin-top: 10px;">
             <label style="font-size: 12px; color: #8fa3b4;">Инсим: <strong id="quiz-inseam-val" style="color: #fff;">${quizState.inseam}</strong> см</label>
@@ -163,12 +166,12 @@
         
         <div style="font-size: 12px; color: #8fa3b4; margin-bottom: 6px; text-transform: uppercase;">Посадка:</div>
         <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px;">
-          ${renderRadio('posture', 'comfort_endurance', '🛋 Классический эндюранс', 'Максимальный комфорт, разгруженные руки и спина, спокойный темп.')}
-          ${renderRadio('posture', 'sport_endurance', '🚀 Спорт-эндюранс', 'Бодрый спортивный темп и тренировки, но с комфортом на 4+ часа.')}
-          ${renderRadio('posture', 'race', '⚡️ Гонки и агрессивный спорт', 'Низкая плотная аэро-посадка, жесткость рамы, бескомпромиссная скорость.')}
+          ${renderRadio('posture', 'comfort_endurance', '🛋 Комфортная', 'Максимальный комфорт, разгруженные руки и спина, спокойный темп.')}
+          ${renderRadio('posture', 'sport_endurance', '🚀 Комфортный спорт', 'Бодрый спортивный темп и тренировки, но с комфортом на 4+ часа.')}
+          ${renderRadio('posture', 'race', '⚡️ Спортивная', 'Низкая плотная аэро-посадка, жесткость рамы, бескомпромиссная скорость.')}
         </div>
 
-        <div style="font-size: 12px; color: #8fa3b4; margin-bottom: 6px; text-transform: uppercase;">Специфика (можно несколько):</div>
+        <div style="font-size: 12px; color: #8fa3b4; margin-bottom: 6px; text-transform: uppercase;">Дополнительные задачи (можно несколько):</div>
         <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px;">
           ${renderCheckbox('longDistance', '🏔 Длинные дистанции и объемы')}
           ${renderCheckbox('fasterAsphalt', '⚡️ Быть чуть быстрее на асфальте')}
@@ -205,9 +208,9 @@
       if (quizState.surface === 'gravel_asphalt') surfaceText = 'Гравий / асфальт (70% / 30%)';
       if (quizState.surface === 'gravel') surfaceText = 'В основном гравий (70%+)';
 
-      let postureText = 'Спорт-эндюранс (комфортно для спины, но динамично)';
-      if (quizState.posture === 'comfort_endurance') postureText = 'Классический эндюранс (максимальный комфорт)';
-      if (quizState.posture === 'race') postureText = 'Гонки и спорт (агрессивная аэро-посадка)';
+      let postureText = 'Комфортный спорт (баланс скорости и удобства на 4+ часа)';
+      if (quizState.posture === 'comfort_endurance') postureText = 'Комфортная (максимальное удобство, разгруженная спина)';
+      if (quizState.posture === 'race') postureText = 'Спортивная (аэродинамичная посадка, акцент на скорость)';
 
       let tasksArr = [];
       if (quizState.tasks.longDistance) tasksArr.push('длинные дистанции и объемы');
@@ -221,7 +224,7 @@
       if (quizState.budget === '250_400k') budgetText = '250 000 – 400 000 ₽';
       if (quizState.budget === 'over_400k') budgetText = 'от 400 000 ₽';
 
-      const fullSummary = `Резюме подбора LifeRideLife:\n\n• Рост: ${quizState.height} см (размер рамы: ${fit.sizeLabel})\n• Покрытие: ${surfaceText}\n• Посадка: ${postureText}\n• Задачи: ${tasksStr}\n• Рекомендованный класс: ${fit.recommendedClass}\n• Бюджет: ${budgetText}`;
+      const fullSummary = `Резюме подбора LifeRideLife:\n\n• Рост: ${quizState.height} см (размер рамы: ${fit.sizeLabel})\n• Покрытие: ${surfaceText}\n• Посадка: ${postureText}\n• Дополнительные задачи: ${tasksStr}\n• Рекомендованный класс: ${fit.recommendedClass}\n• Бюджет: ${budgetText}`;
 
       container.innerHTML = `
         <div style="background: rgba(36, 161, 222, 0.1); border: 1px solid rgba(36, 161, 222, 0.3); border-radius: 12px; padding: 14px; margin-bottom: 16px; font-size: 13px; line-height: 1.5;">
@@ -232,7 +235,7 @@
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          <button onclick="quizApplyFilters('${fit.sizeTag}', '${fit.classTag}')" style="padding: 12px; border-radius: 10px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-weight: 600; cursor: pointer;">
+          <button onclick="quizApplyFilters('${fit.sizeTag}', '${fit.classTag}', '${fit.budgetTag}')" style="padding: 12px; border-radius: 10px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-weight: 600; cursor: pointer;">
             🔍 Показать подходящие в наличии
           </button>
           
@@ -337,24 +340,28 @@
     renderStep();
   };
 
-  window.quizApplyFilters = function (sizeTag, singleClassTag) {
+  window.quizApplyFilters = function (sizeTag, singleClassTag, budgetTag) {
     window.closeQuiz();
     if (typeof window.setCategory === 'function') {
       window.setCategory('bikes');
     }
     
-    // Сбрасываем старые и выставляем строго 2 фильтра: [Размер, Класс]
+    // Выставляем 3 фильтра: [Размер, Класс, Бюджет]
     if (window.selectedTags) {
       window.selectedTags.clear();
       document.querySelectorAll('.tag-pill').forEach(p => p.classList.remove('active'));
 
-      const tagsToActivate = [sizeTag, singleClassTag].filter(Boolean);
+      const tagsToActivate = [sizeTag, singleClassTag, budgetTag].filter(Boolean);
       tagsToActivate.forEach(t => window.selectedTags.add(t));
 
-      // Подсвечиваем активные пилюли в интерфейсе каталога
+      // Подсвечиваем кнопки тегов в UI (с защитой от различий 'к' и 'k')
       document.querySelectorAll('.tag-pill').forEach(pill => {
-        const onclickAttr = pill.getAttribute('onclick') || '';
-        if (tagsToActivate.some(t => onclickAttr.includes(`'${t}'`))) {
+        const onclickAttr = (pill.getAttribute('onclick') || '').toLowerCase().replace(/к/g, 'k');
+        const isMatched = tagsToActivate.some(t => {
+          const cleanT = t.toLowerCase().replace(/к/g, 'k');
+          return onclickAttr.includes("'" + cleanT + "'") || onclickAttr.includes('"' + cleanT + '"');
+        });
+        if (isMatched) {
           pill.classList.add('active');
         }
       });
