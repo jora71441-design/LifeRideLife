@@ -13,7 +13,7 @@
       fasterAsphalt: false,
       bikepacking: false
     },
-    budget: '150_250k'
+    budget: '150_250k' // '0_150k', '150_250k', '250_400k', '400_600k'
   };
 
   // Расчет параметров геометрии, класса и бюджета
@@ -71,12 +71,12 @@
       }
     }
 
-    // 3. Сопоставление тега бюджета каталога
+    // 3. Сопоставление тега бюджета каталога строго по хэштегам LifeRideLife
     let budgetTag = '#150_250к';
-    if (quizState.budget === 'under_150k') budgetTag = '#0_150к';
-    else if (quizState.budget === 'under_200k' || quizState.budget === '150_250k') budgetTag = '#150_250к';
+    if (quizState.budget === '0_150k') budgetTag = '#0_150к';
+    else if (quizState.budget === '150_250k') budgetTag = '#150_250к';
     else if (quizState.budget === '250_400k') budgetTag = '#250_400к';
-    else if (quizState.budget === 'over_400k') budgetTag = '#400_600к';
+    else if (quizState.budget === '400_600k') budgetTag = '#400_600к';
 
     return { sizeTag, sizeLabel, recommendedClass, classTag, budgetTag };
   }
@@ -188,11 +188,10 @@
         <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Шаг 4 из 4: Планируемый бюджет</div>
         
         <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px;">
-          ${renderRadio('budget', 'under_150k', 'До 150 000 ₽', 'Начальный карбон или предтоповый алюминий.')}
-          ${renderRadio('budget', 'under_200k', 'До 200 000 ₽', 'Оптимальный баланс: легкий карбон, надежная гидравлика.')}
-          ${renderRadio('budget', '150_250k', '150 000 – 250 000 ₽', 'Топовый любительский уровень, зазоры под широкую резину.')}
+          ${renderRadio('budget', '0_150k', 'До 150 000 ₽', 'Начальный карбон или предтоповый алюминий на гидравлике.')}
+          ${renderRadio('budget', '150_250k', '150 000 – 250 000 ₽', 'Оптимальный уровень: легкий карбон, надежные группы Shimano / SRAM.')}
           ${renderRadio('budget', '250_400k', '250 000 – 400 000 ₽', 'Электронная трансмиссия (Di2 / AXS), карбоновые вилсеты.')}
-          ${renderRadio('budget', 'over_400k', '400 000 ₽ +', 'Флагманские аэро-болиды, кастомные сборки под ключ.')}
+          ${renderRadio('budget', '400_600k', '400 000 – 600 000 ₽', 'Флагманские аэро-болиды, топовые карбоновые колеса и группы.')}
         </div>
 
         <div style="display: flex; gap: 8px;">
@@ -219,10 +218,9 @@
       const tasksStr = tasksArr.length > 0 ? tasksArr.join(', ') : 'универсальные тренировки и поездки';
 
       let budgetText = '150 000 – 250 000 ₽';
-      if (quizState.budget === 'under_150k') budgetText = 'до 150 000 ₽';
-      if (quizState.budget === 'under_200k') budgetText = 'до 200 000 ₽';
+      if (quizState.budget === '0_150k') budgetText = 'до 150 000 ₽';
       if (quizState.budget === '250_400k') budgetText = '250 000 – 400 000 ₽';
-      if (quizState.budget === 'over_400k') budgetText = 'от 400 000 ₽';
+      if (quizState.budget === '400_600k') budgetText = '400 000 – 600 000 ₽';
 
       const fullSummary = `Резюме подбора LifeRideLife:\n\n• Рост: ${quizState.height} см (размер рамы: ${fit.sizeLabel})\n• Покрытие: ${surfaceText}\n• Посадка: ${postureText}\n• Дополнительные задачи: ${tasksStr}\n• Рекомендованный класс: ${fit.recommendedClass}\n• Бюджет: ${budgetText}`;
 
