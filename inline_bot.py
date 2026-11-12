@@ -3,7 +3,7 @@ import time
 import urllib.request
 import json
 from aiohttp import web
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, types, F
 from aiogram.types import (
     InlineQueryResultPhoto,
     InlineQueryResultsButton,
@@ -11,6 +11,7 @@ from aiogram.types import (
     InlineKeyboardButton
 )
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
+from github_uploader import ADMIN_ID, resolve_repo_path, commit_file_to_github
 
 TOKEN = os.getenv("BOT_TOKEN")
 WEBHOOK_HOST = os.getenv("RENDER_EXTERNAL_URL", "https://liferidelife.onrender.com")
@@ -22,6 +23,7 @@ BASE_IMG_URL = "https://jora71441-design.github.io/LifeRideLife"
 
 # Кэш каталога в памяти, чтобы не нагружать сеть при каждом вводе
 _catalog_cache = {"timestamp": 0, "items": {}}
+
 
 def get_cached_products():
     now = time.time()
@@ -43,6 +45,39 @@ def get_cached_products():
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
+
+
+@dp.message(F.document)
+async def handle_admin_document(message: types.Message):
+    """Принимает файлы кода только от администратора и коммитит их в GitHub."""
+    if not message.from_user or message.from_user.id != ADMIN_ID:
+        return
+
+    doc = message.document
+    filename = doc.file_name or "uploaded_file"
+    status_msg = await message.answer(
+        f"⏳ Загружаю <code>{filename}</code> в GitHub...",
+        parse_mode="HTML"
+    )
+
+    try:
+        file_info = await bot.get_file(doc.file_id)
+        file_io = await bot.download_file(file_info.file_path)
+        file_bytes = file_io.read()
+
+        repo_path = resolve_repo_path(filename, message.caption)
+        success, report = commit_file_to_github(file_bytes, repo_path)
+        await status_msg.edit_text(
+            report,
+            parse_mode="HTML",
+            disable_web_page_preview=True
+        )
+    except Exception as e:
+        await status_msg.edit_text(
+            f"❌ Ошибка обработки файла: <code>{e}</code>",
+            parse_mode="HTML"
+        )
+
 
 @dp.inline_query()
 async def inline_query_handler(query: types.InlineQuery):
@@ -120,14 +155,15 @@ async def on_startup(bot: Bot):
     await bot.set_webhook(WEBHOOK_URL, drop_pending_updates=True)
     print(f"Webhook установлен на: {WEBHOOK_URL}")
 
+
 def main():
     dp.startup.register(on_startup)
     app = web.Application()
-    
-    # 1. Добавляем простой healthcheck для UptimeRobot
+
+    # Простой healthcheck для UptimeRobot
     async def healthcheck(request):
         return web.Response(text="Bot is alive!", status=200)
-    
+
     app.router.add_get("/", healthcheck)
 
     webhook_requests_handler = SimpleRequestHandler(
@@ -136,9 +172,10 @@ def main():
     )
     webhook_requests_handler.register(app, path=WEBHOOK_PATH)
     setup_application(app, dp, bot=bot)
-    
+
     port = int(os.environ.get("PORT", 8080))
     web.run_app(app, host="0.0.0.0", port=port)
+
 
 if __name__ == "__main__":
     main()
