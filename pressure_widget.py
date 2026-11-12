@@ -1,139 +1,209 @@
 import os
-import aiohttp
+import time
+import html
+import urllib.request
+import json
+from aiohttp import web
+from aiogram import Bot, Dispatcher, types, F
+from aiogram.filters import Command
+from aiogram.types import (
+    InlineQueryResultPhoto,
+    InlineQueryResultsButton,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton
+)
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
+from github_uploader import ADMIN_ID, resolve_repo_path, commit_file_to_github
+from pressure_widget import send_pressure_widget
 
-WIDGET_HTML = """<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-  body { background: #18222d; color: #fff; padding: 12px; font-size: 13px; }
-  .hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-  .title { font-weight: 700; font-size: 14px; color: #24a1de; }
-  .badge { font-size: 10px; background: rgba(36,161,222,0.18); color: #5bc0f8; padding: 2px 7px; border-radius: 6px; font-weight: 600; }
-  .res { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-  .box { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 9px; text-align: center; }
-  .lbl { font-size: 11px; color: #8fa3b4; margin-bottom: 2px; }
-  .bar { font-size: 20px; font-weight: 800; color: #fff; }
-  .psi { font-size: 11px; color: #24a1de; font-weight: 600; }
-  .grp { margin-bottom: 10px; }
-  .glbl { display: flex; justify-content: space-between; font-size: 11px; color: #8fa3b4; margin-bottom: 5px; }
-  .glbl b { color: #fff; font-size: 12px; }
-  input[type=range] { width: 100%; accent-color: #24a1de; }
-  .pills { display: flex; gap: 5px; flex-wrap: wrap; }
-  .pill { flex: 1; min-width: 38px; text-align: center; padding: 6px 4px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #cfd9e2; font-size: 11px; font-weight: 600; cursor: pointer; }
-  .pill.on { background: rgba(36,161,222,0.22); border-color: #24a1de; color: #fff; }
-</style>
-</head>
-<body>
-  <div class="hdr">
-    <div class="title">🎯 Давление в шинах</div>
-    <div class="badge">LifeRideLife AI</div>
-  </div>
+TOKEN = os.getenv("BOT_TOKEN")
+WEBHOOK_HOST = os.getenv("RENDER_EXTERNAL_URL", "https://liferidelife.onrender.com")
+WEBHOOK_PATH = "/webhook"
+WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
 
-  <div class="res">
-    <div class="box">
-      <div class="lbl">Переднее</div>
-      <div class="bar" id="f-bar">4.8 bar</div>
-      <div class="psi" id="f-psi">70 psi</div>
-    </div>
-    <div class="box">
-      <div class="lbl">Заднее</div>
-      <div class="bar" id="r-bar">5.1 bar</div>
-      <div class="psi" id="r-psi">74 psi</div>
-    </div>
-  </div>
+PRODUCTS_URL = "https://jora71441-design.github.io/LifeRideLife/products.json"
+BASE_IMG_URL = "https://jora71441-design.github.io/LifeRideLife"
 
-  <div class="grp">
-    <div class="glbl"><span>Вес райдер + байк</span><b id="w-val">82 кг</b></div>
-    <input type="range" id="w-rng" min="50" max="130" value="82">
-  </div>
-
-  <div class="grp">
-    <div class="glbl"><span>Ширина покрышки (мм)</span></div>
-    <div class="pills" id="tire-pills">
-      <div class="pill" data-v="25">25</div>
-      <div class="pill on" data-v="28">28</div>
-      <div class="pill" data-v="30">30</div>
-      <div class="pill" data-v="32">32</div>
-      <div class="pill" data-v="38">38</div>
-      <div class="pill" data-v="42">42</div>
-    </div>
-  </div>
-
-  <div class="grp">
-    <div class="glbl"><span>Установка</span></div>
-    <div class="pills" id="setup-pills">
-      <div class="pill on" data-v="0.90">Бескамерка</div>
-      <div class="pill" data-v="1.00">Камера</div>
-    </div>
-  </div>
-
-  <div class="grp" style="margin-bottom:0">
-    <div class="glbl"><span>Покрытие</span></div>
-    <div class="pills" id="surf-pills">
-      <div class="pill on" data-v="1.00">Сухой асфальт</div>
-      <div class="pill" data-v="0.92">Мокрый</div>
-      <div class="pill" data-v="0.84">Гравий</div>
-    </div>
-  </div>
-
-<script>
-  var st = { w: 82, t: 28, k: 0.90, s: 1.00 };
-  function upd() {
-    var baseRear = 76 * Math.pow(28 / st.t, 1.35) * Math.pow(st.w / 80, 0.85);
-    var rPsi = Math.round(baseRear * st.k * st.s);
-    var fPsi = Math.round(rPsi * 0.93);
-    document.getElementById('w-val').textContent = st.w + ' кг';
-    document.getElementById('r-psi').textContent = rPsi + ' psi';
-    document.getElementById('f-psi').textContent = fPsi + ' psi';
-    document.getElementById('r-bar').textContent = (rPsi * 0.06895).toFixed(1) + ' bar';
-    document.getElementById('f-bar').textContent = (fPsi * 0.06895).toFixed(1) + ' bar';
-  }
-  document.getElementById('w-rng').oninput = function(e) { st.w = +e.target.value; upd(); };
-  function bindGroup(id, key) {
-    var box = document.getElementById(id);
-    box.onclick = function(e) {
-      var el = e.target.closest('.pill');
-      if (!el) return;
-      box.querySelectorAll('.pill').forEach(function(p) { p.classList.remove('on'); });
-      el.classList.add('on');
-      st[key] = parseFloat(el.getAttribute('data-v'));
-      upd();
-    };
-  }
-  bindGroup('tire-pills', 't');
-  bindGroup('setup-pills', 'k');
-  bindGroup('surf-pills', 's');
-  upd();
-</script>
-</body>
-</html>"""
+_catalog_cache = {"timestamp": 0, "items": {}}
 
 
-async def send_pressure_widget(chat_id: int) -> tuple[bool, str]:
-    """Отправляет интерактивный HTML-микровиджет через Bot API 10.4 (sendWidget)."""
-    token = os.getenv("BOT_TOKEN", "").strip()
-    if not token:
-        return False, "Не найден BOT_TOKEN."
+def get_cached_products():
+    now = time.time()
+    if now - _catalog_cache["timestamp"] > 300 or not _catalog_cache["items"]:
+        try:
+            req = urllib.request.Request(
+                PRODUCTS_URL,
+                headers={"User-Agent": "LifeRideLifeBot/1.0"}
+            )
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                _catalog_cache["items"] = {str(item["id"]): item for item in data}
+                _catalog_cache["timestamp"] = now
+        except Exception as e:
+            print(f"[WARN] Не удалось загрузить products.json: {e}")
+    return _catalog_cache["items"]
 
-    url = f"https://api.telegram.org/bot{token}/sendWidget"
-    payload = {
-        "chat_id": chat_id,
-        "widget": {
-            "type": "html",
-            "html": WIDGET_HTML,
-        },
-    }
+
+bot = Bot(token=TOKEN)
+dp = Dispatcher()
+
+
+@dp.message(Command("ping", "start"))
+async def cmd_ping(message: types.Message):
+    if message.from_user and message.from_user.id == ADMIN_ID:
+        await message.answer(
+            "🟢 Бот на связи и готов принимать файлы для GitHub.\n"
+            "• Отправь файл документом — залью в репозиторий.\n"
+            "• Отправь /test_calc — протестировать микровиджет давления (Bot API 10.4)."
+        )
+    else:
+        await message.answer(
+            "👋 Привет! Нажми кнопку «Каталог» ниже, чтобы подобрать велосипед или комплектующие.\n"
+            "• /calc — калькулятор давления в шинах"
+        )
+
+
+@dp.message(Command("test_calc", "calc"))
+async def cmd_test_calc(message: types.Message):
+    """Отправляет тестовый HTML-микровиджет калькулятора давления в шинах."""
+    ok, err = await send_pressure_widget(message.chat.id)
+    if not ok:
+        await message.answer(
+            f"⚠️ Не удалось отрисовать микровиджет <code>sendWidget</code>:\n"
+            f"<code>{html.escape(err)}</code>",
+            parse_mode="HTML"
+        )
+
+
+@dp.message(F.document)
+async def handle_admin_document(message: types.Message):
+    """Принимает файлы кода только от администратора и коммитит их в GitHub."""
+    if not message.from_user or message.from_user.id != ADMIN_ID:
+        return
+
+    doc = message.document
+    filename = doc.file_name or "uploaded_file"
+    status_msg = await message.answer(
+        f"⏳ Загружаю <code>{filename}</code> в GitHub...",
+        parse_mode="HTML"
+    )
 
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, json=payload, timeout=15) as resp:
-                data = await resp.json()
-                if data.get("ok"):
-                    return True, "OK"
-                desc = data.get("description", "Unknown Telegram API error")
-                return False, f"Telegram API ({data.get('error_code')}): {desc}"
+        file_info = await bot.get_file(doc.file_id)
+        file_io = await bot.download_file(file_info.file_path)
+        file_bytes = file_io.read()
+
+        repo_path = resolve_repo_path(filename, message.caption)
+        success, report = commit_file_to_github(file_bytes, repo_path)
+        await status_msg.edit_text(
+            report,
+            parse_mode="HTML",
+            disable_web_page_preview=True
+        )
     except Exception as e:
-        return False, f"Ошибка соединения: {e}"
+        await status_msg.edit_text(
+            f"❌ Ошибка обработки файла: <code>{html.escape(str(e))}</code>",
+            parse_mode="HTML"
+        )
+
+
+@dp.inline_query()
+async def inline_query_handler(query: types.InlineQuery):
+    q = (query.query or "").strip().lower()
+
+    if q.startswith("bike_"):
+        raw_id = q.replace("bike_", "").strip()
+        products = get_cached_products()
+        bike = products.get(raw_id)
+
+        if bike:
+            title = bike.get("title", "Велосипед LifeRideLife")
+            price = bike.get("price", "По запросу")
+            tags = bike.get("originalTagsText", "")
+
+            img_rel = bike.get("imgUrl", "")
+            if img_rel.startswith("./"):
+                photo_url = f"{BASE_IMG_URL}/{img_rel[2:]}"
+            elif img_rel.startswith("http"):
+                photo_url = img_rel
+            else:
+                photo_url = f"{BASE_IMG_URL}/{img_rel}"
+
+            caption = (
+                f"🚴 <b>{title}</b>\n"
+                f"💰 <b>{price}</b>\n\n"
+                f"{tags}\n\n"
+                f"🟢 <i>LifeRideLife • Подбор и сопровождение</i>"
+            )
+
+            app_url = f"https://t.me/liferidelife_bot?startapp=bike_{raw_id}"
+            keyboard = InlineKeyboardMarkup(
+                inline_keyboard=[[
+                    InlineKeyboardButton(text="🚴‍♂️ Открыть в Life Ride Life", url=app_url)
+                ]]
+            )
+
+            result_photo = InlineQueryResultPhoto(
+                id=f"bike_{raw_id}",
+                photo_url=photo_url,
+                thumbnail_url=photo_url,
+                title=f"{title} ({price})",
+                description=f"Отправить карточку байка: {price}",
+                caption=caption,
+                parse_mode="HTML",
+                reply_markup=keyboard
+            )
+
+            await query.answer(
+                results=[result_photo],
+                cache_time=5,
+                is_personal=True
+            )
+            return
+
+    try:
+        await query.answer(
+            results=[],
+            cache_time=0,
+            is_personal=True,
+            button=InlineQueryResultsButton(
+                text="🚲 Подбор вела, размера и каталог",
+                start_parameter="catalog"
+            )
+        )
+    except Exception as e:
+        print(f"[ERROR] Inline query crash: {e}")
+        await query.answer([], cache_time=1, is_personal=True)
+
+
+async def on_startup(bot: Bot):
+    await bot.set_webhook(
+        WEBHOOK_URL,
+        allowed_updates=["message", "inline_query", "callback_query"],
+        drop_pending_updates=False
+    )
+    print(f"Webhook установлен на: {WEBHOOK_URL}")
+
+
+def main():
+    dp.startup.register(on_startup)
+    app = web.Application()
+
+    async def healthcheck(request):
+        return web.Response(text="Bot is alive!", status=200)
+
+    app.router.add_get("/", healthcheck)
+
+    webhook_requests_handler = SimpleRequestHandler(
+        dispatcher=dp,
+        bot=bot,
+    )
+    webhook_requests_handler.register(app, path=WEBHOOK_PATH)
+    setup_application(app, dp, bot=bot)
+
+    port = int(os.environ.get("PORT", 8080))
+    web.run_app(app, host="0.0.0.0", port=port)
+
+
+if __name__ == "__main__":
+    main()
