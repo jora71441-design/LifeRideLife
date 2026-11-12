@@ -4,6 +4,7 @@ import urllib.request
 import json
 from aiohttp import web
 from aiogram import Bot, Dispatcher, types, F
+from aiogram.filters import Command
 from aiogram.types import (
     InlineQueryResultPhoto,
     InlineQueryResultsButton,
@@ -21,13 +22,11 @@ WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
 PRODUCTS_URL = "https://jora71441-design.github.io/LifeRideLife/products.json"
 BASE_IMG_URL = "https://jora71441-design.github.io/LifeRideLife"
 
-# Кэш каталога в памяти, чтобы не нагружать сеть при каждом вводе
 _catalog_cache = {"timestamp": 0, "items": {}}
 
 
 def get_cached_products():
     now = time.time()
-    # Обновляем кэш раз в 5 минут
     if now - _catalog_cache["timestamp"] > 300 or not _catalog_cache["items"]:
         try:
             req = urllib.request.Request(
@@ -45,6 +44,14 @@ def get_cached_products():
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
+
+
+@dp.message(Command("ping", "start"))
+async def cmd_ping(message: types.Message):
+    if message.from_user and message.from_user.id == ADMIN_ID:
+        await message.answer("🟢 Бот на связи и готов принимать файлы для GitHub.")
+    else:
+        await message.answer("👋 Привет! Нажми кнопку «Каталог» ниже, чтобы подобрать велосипед или комплектующие.")
 
 
 @dp.message(F.document)
@@ -83,7 +90,6 @@ async def handle_admin_document(message: types.Message):
 async def inline_query_handler(query: types.InlineQuery):
     q = (query.query or "").strip().lower()
 
-    # 1. Если передали bike_<id> — отдаем карточку конкретного велосипеда
     if q.startswith("bike_"):
         raw_id = q.replace("bike_", "").strip()
         products = get_cached_products()
@@ -109,7 +115,6 @@ async def inline_query_handler(query: types.InlineQuery):
                 f"🟢 <i>LifeRideLife • Подбор и сопровождение</i>"
             )
 
-            # Инлайн-кнопка для перехода сразу в Mini App на этот байк
             app_url = f"https://t.me/liferidelife_bot?startapp=bike_{raw_id}"
             keyboard = InlineKeyboardMarkup(
                 inline_keyboard=[[
@@ -135,7 +140,6 @@ async def inline_query_handler(query: types.InlineQuery):
             )
             return
 
-    # 2. Во всех остальных случаях (пустой запрос) — стандартная кнопка запуска Mini App
     try:
         await query.answer(
             results=[],
@@ -152,7 +156,11 @@ async def inline_query_handler(query: types.InlineQuery):
 
 
 async def on_startup(bot: Bot):
-    await bot.set_webhook(WEBHOOK_URL, drop_pending_updates=True)
+    await bot.set_webhook(
+        WEBHOOK_URL,
+        allowed_updates=["message", "inline_query", "callback_query"],
+        drop_pending_updates=False
+    )
     print(f"Webhook установлен на: {WEBHOOK_URL}")
 
 
@@ -160,7 +168,6 @@ def main():
     dp.startup.register(on_startup)
     app = web.Application()
 
-    # Простой healthcheck для UptimeRobot
     async def healthcheck(request):
         return web.Response(text="Bot is alive!", status=200)
 
