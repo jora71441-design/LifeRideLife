@@ -1,5 +1,6 @@
 import os
 import time
+import html
 import urllib.request
 import json
 from aiohttp import web
@@ -13,6 +14,7 @@ from aiogram.types import (
 )
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from github_uploader import ADMIN_ID, resolve_repo_path, commit_file_to_github
+from pressure_widget import send_pressure_widget
 
 TOKEN = os.getenv("BOT_TOKEN")
 WEBHOOK_HOST = os.getenv("RENDER_EXTERNAL_URL", "https://liferidelife.onrender.com")
@@ -49,9 +51,28 @@ dp = Dispatcher()
 @dp.message(Command("ping", "start"))
 async def cmd_ping(message: types.Message):
     if message.from_user and message.from_user.id == ADMIN_ID:
-        await message.answer("🟢 Бот на связи и готов принимать файлы для GitHub.")
+        await message.answer(
+            "🟢 Бот на связи и готов принимать файлы для GitHub.\n"
+            "• Отправь файл документом — залью в репозиторий.\n"
+            "• Отправь /test_calc — протестировать микровиджет давления (Bot API 10.4)."
+        )
     else:
-        await message.answer("👋 Привет! Нажми кнопку «Каталог» ниже, чтобы подобрать велосипед или комплектующие.")
+        await message.answer(
+            "👋 Привет! Нажми кнопку «Каталог» ниже, чтобы подобрать велосипед или комплектующие.\n"
+            "• /calc — калькулятор давления в шинах"
+        )
+
+
+@dp.message(Command("test_calc", "calc"))
+async def cmd_test_calc(message: types.Message):
+    """Отправляет тестовый HTML-микровиджет калькулятора давления в шинах."""
+    ok, err = await send_pressure_widget(message.chat.id)
+    if not ok:
+        await message.answer(
+            f"⚠️ Не удалось отрисовать микровиджет <code>sendWidget</code>:\n"
+            f"<code>{html.escape(err)}</code>",
+            parse_mode="HTML"
+        )
 
 
 @dp.message(F.document)
@@ -81,7 +102,7 @@ async def handle_admin_document(message: types.Message):
         )
     except Exception as e:
         await status_msg.edit_text(
-            f"❌ Ошибка обработки файла: <code>{e}</code>",
+            f"❌ Ошибка обработки файла: <code>{html.escape(str(e))}</code>",
             parse_mode="HTML"
         )
 
